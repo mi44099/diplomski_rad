@@ -88,10 +88,10 @@ int edf_set ( time_t deadline, time_t period, int flags )
   thread_t thread;
   param.edf.deadline = deadline;
   param.edf.period = period;
-  param.edf.flags |= EDF_SET ;
-  
+  param.edf.flags = flags | EDF_SET ;
+
   thread_self ( &thread );
-  
+
   return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
 }
 
@@ -99,10 +99,10 @@ int edf_wait ( )
 {
   sched_t param;
   thread_t thread;
-  param.edf.flags |= EDF_WAIT ;
-  
+  param.edf.flags = EDF_WAIT ;
+
   thread_self ( &thread );
-  
+
   return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
 }
 
@@ -110,9 +110,9 @@ int edf_exit ( )
 {
   sched_t param;
   thread_t thread;
-  param.edf.flags |= EDF_EXIT ;
-  
+  param.edf.flags = EDF_EXIT ;
+
   thread_self ( &thread );
-  
+
   return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
 }

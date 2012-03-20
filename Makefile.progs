@@ -52,8 +52,9 @@ shell		= 0x10000 0x10000 0x1000 shell		programs/shell
 rr		= 0x10000 0x10000 0x1000 round_robin	programs/round_robin
 edf		= 0x10000 0x10000 0x1000 edf		programs/earliest_deadline_first
 
-PROGRAMS = hello timer keyboard args shell uthreads threads semaphores monitors \
-messages rr edf
+#PROGRAMS = hello timer keyboard args shell uthreads threads semaphores monitors \
+#messages rr edf
+PROGRAMS = shell rr edf
 
 
 # Programs compilation through template ----------------------------------------

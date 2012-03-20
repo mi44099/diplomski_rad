@@ -43,8 +43,8 @@ DEV_PTRS := $(subst $(space),$(comma),$(DEV_PTRS))
 
 CMACROS += $(DEVICES) DEVICES_DEV=$(DEV_VARS) DEVICES_DEV_PTRS=$(DEV_PTRS) \
 	IC_DEV=i8259 TIMER=i8253 K_INITIAL_STDOUT=vga_text_dev		   \
-	K_STDOUT="\"COM1\"" U_STDOUT="\"VGA_TXT\"" U_STDIN="\"i8042\""
-#	K_STDOUT="\"VGA_TXT\"" U_STDOUT="\"COM1\"" U_STDIN="\"COM1\""
+	K_STDOUT="\"COM1\"" U_STDOUT="\"COM1\"" U_STDIN="\"i8042\""
+#	K_STDOUT="\"COM1\"" U_STDOUT="\"VGA_TXT\"" U_STDIN="\"i8042\""
 
 #------------------------------------------------------------------------------
 # Memory
