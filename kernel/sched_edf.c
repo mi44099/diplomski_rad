@@ -178,8 +178,11 @@ kprint(" NULL!!\n");
 		{
 			sch_next = kthread_get_sched_param ( next );
 
-			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline - &now );	
-			drugi = (time_t *) (&sch_next->params.edf.next_run - &sch_next->params.edf.period + &sch_next->params.edf.deadline - &now );
+			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline );	
+			time_sub ( prvi, &now );
+
+			drugi = (time_t *) (&sch_next->params.edf.next_run - &sch_next->params.edf.period + &sch_next->params.edf.deadline );
+			time_sub ( drugi, &now );
 
 			if ( time_cmp (	prvi, drugi ) > 0 )
 			{
