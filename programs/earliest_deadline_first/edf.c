@@ -8,7 +8,7 @@
 char PROG_HELP[] = "Thread demonstration example: create several threads that "
 		   "perform simple iterations and print basic info.";
 
-#define THR_NUM	3
+#define THR_NUM	4
 #define TEST_DURATION	10 /* seconds */
 
 

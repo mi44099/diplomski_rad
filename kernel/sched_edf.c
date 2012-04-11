@@ -148,7 +148,7 @@ static void k_edf_schedule ()
 	kthread_t *next, *first, *prva;
 	kthread_sched_data_t *sch_first, *sch_next;
 	ksched_t *gsched = ksched_get ( SCHED_EDF );
-	//time_t now, *prvi, *drugi;
+	time_t now, *prvi, *drugi;
 
 //	k_get_time ( &now );
 
@@ -178,10 +178,10 @@ kprint(" NULL!!\n");
 		{
 			sch_next = kthread_get_sched_param ( next );
 
-//			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline - &now );	
-//			drugi = (time_t *) (&sch_next->params.edf.next_run - &sch_next->params.edf.period + &sch_next->params.edf.deadline - &now );
+			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline - &now );	
+			drugi = (time_t *) (&sch_next->params.edf.next_run - &sch_next->params.edf.period + &sch_next->params.edf.deadline - &now );
 
-			if ( time_cmp (	&sch_first->params.edf.deadline, &sch_next->params.edf.deadline ) > 0 )
+			if ( time_cmp (	prvi, drugi ) > 0 )
 			{
 				first = next;
 			}
