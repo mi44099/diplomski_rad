@@ -154,11 +154,13 @@ int sys__set_thread_sched_params ( void *p )
 
 	ksched_set_thread_policy ( kthread, sched_policy );
 
+	kthread_set_prio ( kthread, prio );
+
 	if ( params && ksched[sched_policy] &&
 	     ksched[sched_policy]->set_thread_sched_parameters )
 		ksched[sched_policy]->set_thread_sched_parameters ( kthread,
 								    params );
-	kthread_set_prio ( kthread, prio );
+
 
 	return 0;
 }

@@ -24,5 +24,5 @@ int get_thread_sched_params ( thread_t *thread, int *sched_policy, int *prio,
 		       sched_t *params );
 
 int edf_set ( time_t deadline, time_t period, int flags );
-int edf_wait ( );
-int edf_exit ( );
+int edf_wait ( time_t deadline, time_t period, int flags );
+int edf_exit ( time_t deadline, time_t period, int flags );

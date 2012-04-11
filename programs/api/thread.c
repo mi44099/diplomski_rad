@@ -95,22 +95,22 @@ int edf_set ( time_t deadline, time_t period, int flags )
   return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
 }
 
-int edf_wait ( )
+int edf_wait ( time_t deadline, time_t period, int flags )
 {
   sched_t param;
   thread_t thread;
-  param.edf.flags = EDF_WAIT ;
+  param.edf.flags = flags | EDF_WAIT ;
 
   thread_self ( &thread );
 
   return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
 }
 
-int edf_exit ( )
+int edf_exit ( time_t deadline, time_t period, int flags )
 {
   sched_t param;
   thread_t thread;
-  param.edf.flags = EDF_EXIT ;
+  param.edf.flags = flags | EDF_EXIT ;
 
   thread_self ( &thread );
 

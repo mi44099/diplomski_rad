@@ -22,10 +22,10 @@ ksched_edf_thread_params_t;
 /*! edf global parameters */
 typedef struct _ksched_edf_t_
 {
-	kthread_t *active; 	//kazaljka na dretvu odabranu od EDFa
+	kthread_t *active;
 
-	kthread_q ready; 	//edf pripravne
-	kthread_q wait; 	//edf pripravne
+	kthread_q ready;
+	kthread_q wait;
 }
 ksched_edf_t;
 
