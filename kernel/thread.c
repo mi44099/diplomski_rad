@@ -965,7 +965,7 @@ inline kthread_t *kthreadq_get ( kthread_q *q )
 }
 inline kthread_t *kthreadq_get_next ( kthread_t *kthread )
 {
-	return list_get_next ( &kthread->ql );
+	return list_get_next ( &kthread->ql );   //kthread->queue->q.first->object
 }
 
 /*! Temporary storage for blocked thread (save specific context before wait) */

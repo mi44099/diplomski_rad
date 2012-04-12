@@ -5,6 +5,8 @@
  *
  */
 
+#include <api/stdio.h>
+
 #pragma once
 
 /*! List element pointers */

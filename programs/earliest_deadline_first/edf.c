@@ -8,14 +8,14 @@
 char PROG_HELP[] = "Thread demonstration example: create several threads that "
 		   "perform simple iterations and print basic info.";
 
-#define THR_NUM	4
+#define THR_NUM	3
 #define TEST_DURATION	10 /* seconds */
 
 
 /* example threads */
 static void edf_thread ( void *param )
 {
-	int thr_no, i, j, k = 2;
+	int thr_no, i, j, k = 3;
 	time_t sleep;
 	thr_no = (int) param;
 	time_t period, deadline;
@@ -63,7 +63,7 @@ int edf ( char *args[] )
 	for ( i = 1; i <= THR_NUM; i++ )
 		wait_for_thread ( &thread[i], IPC_WAIT );
 
-	while(1);
+//	while(1);
 
 	for ( i = 1; i <= THR_NUM; i++ )
 		print ( "Thread %d\n", i );

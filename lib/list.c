@@ -23,6 +23,8 @@ void list_append ( list_t *list, void *object, list_h *hdr )
 
 	hdr->object = object; /* save reference to object */
 	hdr->next = NULL; /* put it at list end (as last element) */
+	
+	ASSERT ( hdr->object );
 
 	if ( list->first )
 	{
