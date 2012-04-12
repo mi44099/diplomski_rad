@@ -21,21 +21,22 @@ static void edf_thread ( void *param )
 	time_t period, deadline;
 
 	i = thr_no;
-	period.sec = thr_no * 4;
+	period.sec = thr_no * 1;
 	period.nsec = 0;
-	deadline.sec = thr_no * 2;
+	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
 
-	print ( "EDF thread %d setting", thr_no );
+	print ( "EDF thread %d setting\n", thr_no );
 	edf_set ( deadline, period, EDF_SET );
 
-	while ( k-- > 0 ) 
+	while ( k-- > 0 )
 	{
 		print ( "\nThread %d call EDF_WAIT\n", thr_no );
 		edf_wait ( deadline, period, EDF_WAIT );
 
-		print( "\nThread %d is running", thr_no );
-		for ( j = 1; j <= thr_no * 6 * 10000000; j++ );
+		print( "\nThread %d is running\n", thr_no );
+		for ( j = 1; j <= 10000000; j++ )
+			memory_barrier();
 	}
 
 	print ( "\nEDF thread %d exiting\n", thr_no );
@@ -59,7 +60,7 @@ int edf ( char *args[] )
 
 	//print ( "Threads created!!\n\n" );
 
-	
+
 	for ( i = 1; i <= THR_NUM; i++ )
 		wait_for_thread ( &thread[i], IPC_WAIT );
 

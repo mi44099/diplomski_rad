@@ -86,22 +86,25 @@ static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params
 
 	if ( params->edf.flags == EDF_SET )
 	{
-		kprint( " : %x \n", kthread );
+kthread_info ();
+		kprint( " : %x [SET]\n", kthread );
 		tsched->params.edf.period = params->edf.period;
 		tsched->params.edf.deadline = params->edf.deadline;
 		tsched->params.edf.flags = 0;//params->edf.flags ^ EDF_SET;
 
 		tsched->params.edf.next_run = now;
 
-		k_alarm_new (	&tsched->params.edf.edf_alarm,
-				&alarm,
-				KERNELCALL );
-	
+		//k_alarm_new (	&tsched->params.edf.edf_alarm,
+		//		&alarm,
+		//		KERNELCALL );
+
 	}
 	else if ( params->edf.flags == EDF_WAIT )
 	{
+		kprint( " : %x [WAIT0]\n", kthread );
 		if ( time_cmp ( &tsched->params.edf.next_run, &now ) > 0 )
 		{
+		kprint( " : %x [WAIT1]\n", kthread );
 
 			alarm.exp_time = tsched->params.edf.next_run;
 			alarm.period.sec = alarm.period.nsec = 0;
@@ -113,19 +116,22 @@ static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params
 					&tsched->params.edf.period );
 
 			kthread_enqueue ( kthread, &gsched->params.edf.wait );
-			k_alarm_set ( tsched->params.edf.edf_alarm, &alarm );
+kthread_info ();
+			//k_alarm_set ( tsched->params.edf.edf_alarm, &alarm );
 		}
 		else {
+		kprint( " : %x [WAIT2]\n", kthread );
 			time_add (	&tsched->params.edf.next_run,
 					&tsched->params.edf.period );
-			
-			kthread_enqueue ( kthread, &gsched->params.edf.ready );
 
-			k_edf_schedule ();
+			kthread_enqueue ( kthread, &gsched->params.edf.ready );
+			//k_alarm_set ( tsched->params.edf.edf_alarm, &alarm );
+kthread_info ();
 		}
 	}
 	else if ( params->edf.flags == EDF_EXIT )
 	{
+		kprint( " : %x [EXIT]\n", kthread );
 		//k_alarm_remove ( &tsched->params.edf.edf_alarm );
 
 		tsched->sched_policy = SCHED_FIFO;
@@ -133,10 +139,10 @@ static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params
 		// ovo ne treba, kad je aktivna, nije u edf.ready
 		//(void) kthreadq_remove ( &gsched->params.edf.ready, kthread );
 
-		kthread_remove_from_ready ( kthread );
-
-		k_edf_schedule ();
+		//kthread_remove_from_ready ( kthread );
 	}
+
+	k_edf_schedule ();
 
 	return 0;
 }
@@ -167,7 +173,7 @@ kprint(" NULL!!\n");
 */
 
 	first = kthreadq_get ( &gsched->params.edf.ready );
-//	kprint("\n prva u ready:%x\n", first);
+	kprint("\n prva u ready:%x\n", first);
 
 	if ( first )
 	{
@@ -176,13 +182,13 @@ kprint(" NULL!!\n");
 		gsched = ksched_get ( sch_first->sched_policy );
 
 		next = kthreadq_get_next ( first );
-//		kprint(" slijedeca u ready:%x \n", next);
+		kprint(" slijedeca u ready:%x \n", next);
 
 		for ( ; next != NULL;  )
 		{
 			sch_next = kthread_get_sched_param ( next );
 
-			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline );	
+			prvi = (time_t *) (&sch_first->params.edf.next_run - &sch_first->params.edf.period + &sch_first->params.edf.deadline );
 			time_sub ( prvi, &now );
 
 			drugi = (time_t *) (&sch_next->params.edf.next_run - &sch_next->params.edf.period + &sch_next->params.edf.deadline );
@@ -211,7 +217,11 @@ while( prva ) {
 }
 kprint(" NULL!!\n");
 */
+	first = kthreadq_get ( &gsched->params.edf.ready );
+	kprint("\n prva u ready:%x\n", first);
+
 	kthreads_schedule ();
+//kthread_info ();
 
 }
 
@@ -225,6 +235,8 @@ static int edf_thread_activate ( kthread_t *kthread )
 static void edf_timer ( void *p )
 {
 	kthread_t *kthread = p;
+
+	kprint("\n *---> ALARM : %x\n", kthread);
 
 	if ( kthread && kthreadq_remove ( &ksched_edf.params.edf.wait, kthread ) )       //!!!!!!!!!!!!!!
 	{

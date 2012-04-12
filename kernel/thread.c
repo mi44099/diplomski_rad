@@ -789,9 +789,9 @@ int kthread_info ()
 
 	kprint ( "Threads info\n" );
 
-	kprint ( "[this]\tid=%d in process at %x, size=%d\n",
+	kprint ( "[this]\tid=%d in process at %x, size=%d (%x)\n",
 		  active_thread->id, active_thread->proc->m.start,
-		  active_thread->proc->m.size );
+		  active_thread->proc->m.size, active_thread );
 
 	kprint ( "\tprio=%d, state=%d, ret_val=%d\n",
 		  active_thread->prio, active_thread->state,
@@ -800,9 +800,9 @@ int kthread_info ()
 	kthread = list_get ( &all_threads, FIRST );
 	while ( kthread )
 	{
-		kprint ( "[%d]\tid=%d in process at %x, size=%d\n",
+		kprint ( "[%d]\tid=%d in process at %x, size=%d (%x)\n",
 			 i++, kthread->id, kthread->proc->m.start,
-			 kthread->proc->m.size );
+			 kthread->proc->m.size, kthread );
 
 		kprint ( "\tprio=%d, state=%d, ret_val=%d\n",
 			 kthread->prio, kthread->state,
@@ -834,9 +834,9 @@ int sys__get_errno ( void *p )
 
 inline int kthread_is_active ( kthread_t *kthread )
 {
-	if ( kthread->state == THR_STATE_ACTIVE ) 
+	if ( kthread->state == THR_STATE_ACTIVE )
 		return 1;
-	else 
+	else
 		return 0;
 }
 

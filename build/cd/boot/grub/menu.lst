@@ -1,9 +1,0 @@
-default 0
-timeout=0
-title diprad
-root (cd)
-kernel /boot/kernel.elf
-module /boot/shell.bin.gz prog_name=shell
-module /boot/rr.bin.gz prog_name=rr
-module /boot/edf.bin.gz prog_name=edf
-boot
