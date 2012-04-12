@@ -156,7 +156,7 @@ static void k_edf_schedule ()
 //	k_get_time ( &now );
 
 // ISPIS DRETVI U EDF.READY
-
+/*
 prva = kthreadq_get ( &gsched->params.edf.ready );
 kprint("\nREADY: ");
 while( prva ) {
@@ -164,7 +164,7 @@ while( prva ) {
 	prva = kthreadq_get_next ( prva );
 }
 kprint(" NULL!!\n");
-
+*/
 
 	first = kthreadq_get ( &gsched->params.edf.ready );
 //	kprint("\n prva u ready:%x\n", first);
