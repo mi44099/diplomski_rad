@@ -16,6 +16,8 @@ static inline int get_errno ()
 
 #ifdef DEBUG
 
+#include <api/stdio.h>
+
 /* assert and return */
 #define ASSERT_ERRNO_AND_RETURN(expr, errnum)			\
 do {								\

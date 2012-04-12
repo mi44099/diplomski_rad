@@ -8,11 +8,14 @@
 CC_K = gcc
 LINK_K = ld
 
-CFLAGS_K =  -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
+CFLAGS_K = -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
 	-fdata-sections -ffunction-sections -g
+#CFLAGS_K = -O3 -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
+#	-fdata-sections -ffunction-sections
 
 LDSCRIPT_K = arch/$(PLATFORM)/kernel.ld
 LDFLAGS_K = -melf_i386 -T $(LDSCRIPT_K) --gc-sections
+#LDFLAGS_K = -O3 -melf_i386 -T $(LDSCRIPT_K) --gc-sections -s
 
 #------------------------------------------------------------------------------
 BUILD_K = $(BUILDDIR)/kernel
@@ -26,7 +29,7 @@ KERNEL_IMG = $(BUILDDIR)/$(KERNEL_FILE_NAME)
 
 K_INIT_PROG = shell
 
-CMACROS_K := DEBUG $(CMACROS) ASSERT_H=\<kernel/errno.h\>	\
+CMACROS_K := $(CMACROS) ASSERT_H=\<kernel/errno.h\>	\
 		K_INIT_PROG=\"$(K_INIT_PROG)\"
 
 #------------------------------------------------------------------------------

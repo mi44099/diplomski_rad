@@ -7,8 +7,16 @@
 
 char PROG_HELP[] = "EDF scheduling demonstration example";
 
-#define THR_NUM	1
+#define THR_NUM	3
 
+void message ( int thread, char *action )
+{
+	time_t t;
+
+	time_get ( &t );
+	print ( "[%d:%d] Thread %d -- %s\n",
+		t.sec, t.nsec/100000000, thread, action );
+}
 
 /* example threads */
 static void edf_thread ( void *param )
@@ -23,20 +31,20 @@ static void edf_thread ( void *param )
 	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
 
-	print ( "Thread %d calling EDF_SET\n", thr_no );
+	message ( thr_no, "EDF_SET" );
 	edf_set ( deadline, period, EDF_SET );
 
 	for ( i = 0; i < 3; i++ )
 	{
-		print ( "Thread %d calling EDF_WAIT\n", thr_no );
+		message ( thr_no, "EDF_WAIT" );
 		edf_wait ();
 
-		print( "Thread %d running\n", thr_no );
+		message ( thr_no, "run" );
 		for ( j = 1; j <= 10000000; j++ )
 			memory_barrier();
 	}
 
-	print ( "Thread %d calling EDF_EXIT\n", thr_no );
+	message ( thr_no, "EDF_EXIT" );
 	edf_exit ();
 }
 

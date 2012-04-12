@@ -8,11 +8,14 @@
 CC_U = gcc
 LINK_U = ld
 
-CFLAGS_U =  -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
+CFLAGS_U = -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
 	-fdata-sections -ffunction-sections -g
+#CFLAGS_U = -O3 -m32 -Wall -ffreestanding -nostdlib -fno-stack-protector \
+#	-fdata-sections -ffunction-sections
 
 LDSCRIPT_U = arch/$(PLATFORM)/user.ld
-LDFLAGS_U =  -melf_i386 -T $(LDSCRIPT_U) --gc-sections
+LDFLAGS_U = -melf_i386 -T $(LDSCRIPT_U) --gc-sections
+#LDFLAGS_U = -O3 -melf_i386 -T $(LDSCRIPT_U) --gc-sections -s
 
 #------------------------------------------------------------------------------
 
@@ -21,7 +24,7 @@ BUILD_U := $(BUILDDIR)/progs
 DIRS_U := programs/api $(LIBS)
 INCLUDES_U := . programs arch/$(PLATFORM)
 
-CMACROS_U := $(CMACROS) U_DEBUG ASSERT_H=\<api/errno.h\>
+CMACROS_U := $(CMACROS) ASSERT_H=\<api/errno.h\>
 
 #------------------------------------------------------------------------------
 # Memory

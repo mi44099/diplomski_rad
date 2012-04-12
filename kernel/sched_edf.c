@@ -13,15 +13,15 @@ static int edf_thread_add ( kthread_t *thread );
 static int edf_thread_remove ( kthread_t *thread );
 static int edf_set_sched_parameters ( int sched_policy, sched_t *params );
 static int edf_get_sched_parameters ( int sched_policy, sched_t *params );
-static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params );
-static int edf_get_thread_sched_parameters ( kthread_t *kthread, sched_t *params );
+static int edf_set_thread_sched_parameters(kthread_t *kthread, sched_t *params);
+static int edf_get_thread_sched_parameters(kthread_t *kthread, sched_t *params);
 static int edf_thread_activate ( kthread_t *kthread );
 static void edf_timer ( void *p );
 static int edf_thread_deactivate ( kthread_t *kthread );
-static void k_edf_schedule ();
+static int k_edf_schedule ();
 static int edf_check_deadline ( kthread_t *kthread );
 
-/*! staticaly defined Round Robin Scheduler */
+/*! staticaly defined Earliest-Deadline-First Scheduler */
 ksched_t ksched_edf = (ksched_t)
 {
 	.sched_id =		SCHED_EDF,
@@ -38,7 +38,7 @@ ksched_t ksched_edf = (ksched_t)
 	.get_thread_sched_parameters =	edf_get_thread_sched_parameters,
 };
 
-/*! Init edf scheduler */
+/*! Init EDF scheduler */
 static int edf_init ( ksched_t *self )
 {
 	self->params.edf.active = NULL;
@@ -51,7 +51,7 @@ static int edf_thread_add ( kthread_t *kthread )
 {
 	return 0;
 }
-static int edf_thread_remove ( kthread_t *thread )
+static int edf_thread_remove ( kthread_t *kthread )
 {
 	return 0;
 }
@@ -64,7 +64,7 @@ static int edf_get_sched_parameters ( int sched_policy, sched_t *params )
 	return 0;
 }
 
-static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params )
+static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 {
 	time_t now;
 	alarm_t alarm;
@@ -144,8 +144,8 @@ static int edf_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params
 
 		tsched->sched_policy = SCHED_FIFO;
 
-		k_edf_schedule ();
-		kthreads_schedule (); /* will NOT call edf_schedule() */
+		if ( k_edf_schedule () )
+			kthreads_schedule (); /* will NOT call edf_schedule() */
 	}
 
 	return 0;
@@ -156,11 +156,12 @@ static int edf_get_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 	return 0;
 }
 
-static void k_edf_schedule ()
+static int k_edf_schedule ()
 {
-	kthread_t *next, *first;
+	kthread_t *first, *next;
 	kthread_sched_data_t *sch_first, *sch_next;
 	ksched_t *gsched = ksched_get ( SCHED_EDF );
+	int retval = 0;
 
 	next = first = kthreadq_get ( &gsched->params.edf.ready );
 
@@ -181,13 +182,10 @@ static void k_edf_schedule ()
 	{
 		(void) kthreadq_remove ( &gsched->params.edf.ready, first );
 		kthread_move_to_ready ( first, LAST );
+		retval = 1;
 	}
-}
 
-
-static int edf_thread_activate ( kthread_t *kthread )
-{
-	return 0;
+	return retval;
 }
 
 /*! Timer interrupt for edf */
@@ -213,6 +211,11 @@ static void edf_timer ( void *p )
 	}
 }
 
+static int edf_thread_activate ( kthread_t *kthread )
+{
+	return 0;
+}
+
 /*!
  * Deactivate thread because:
  * 1. higher priority thread becomes active
@@ -221,9 +224,7 @@ static void edf_timer ( void *p )
  */
 static int edf_thread_deactivate ( kthread_t *kthread )
 {
-	k_edf_schedule ();
-
-	return 0;
+	return k_edf_schedule ();
 }
 
 /*!

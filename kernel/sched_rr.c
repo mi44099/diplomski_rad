@@ -8,12 +8,12 @@
 #include <lib/types.h>
 
 static int rr_init ( ksched_t *self );
-static int rr_thread_add ( kthread_t *thread );
-static int rr_thread_remove ( kthread_t *thread );
+static int rr_thread_add ( kthread_t *kthread );
+static int rr_thread_remove ( kthread_t *kthread );
 static int rr_set_sched_parameters ( int sched_policy, sched_t *params );
 static int rr_get_sched_parameters ( int sched_policy, sched_t *params );
-static int rr_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params );
-static int rr_get_thread_sched_parameters ( kthread_t *kthread, sched_t *params );
+static int rr_set_thread_sched_parameters (kthread_t *kthread, sched_t *params);
+static int rr_get_thread_sched_parameters (kthread_t *kthread, sched_t *params);
 static int rr_thread_activate ( kthread_t *kthread );
 static void rr_timer ( void *p );
 static int rr_thread_deactivate ( kthread_t *kthread );
@@ -68,7 +68,7 @@ static int rr_thread_add ( kthread_t *kthread )
 
 	return 0;
 }
-static int rr_thread_remove ( kthread_t *thread )
+static int rr_thread_remove ( kthread_t *kthread )
 {
 	/* TODO */
 	return 0;
@@ -88,7 +88,7 @@ static int rr_get_sched_parameters ( int sched_policy, sched_t *params )
 	return 0;
 }
 
-static int rr_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params )
+static int rr_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 {
 	/* Nothing to set for thread! Just as an example - set to global RR */
 	ksched_rr.params.rr.time_slice = params->rr.time_slice;
@@ -96,7 +96,7 @@ static int rr_set_thread_sched_parameters ( kthread_t *kthread, sched_t *params 
 	return 0;
 }
 
-static int rr_get_thread_sched_parameters ( kthread_t *kthread, sched_t *params )
+static int rr_get_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 {
 	/* TODO */
 	return 0;
