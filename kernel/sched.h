@@ -67,7 +67,7 @@ int ksched_deactivate_thread ( kthread_t *kthread );
 /*! Union of per scheduler specific data types required */
 typedef union _ksched_params_t_
 {
-	ksched_rr_t rr;		/* Round Robin global data */
+	ksched_rr_t rr;	/* Round Robin global data */
 	ksched_edf_t edf;
 
 	/* add others thread scheduling parameters for other schedulers that
@@ -107,7 +107,7 @@ struct _ksched_t_
 
 	/* get scheduler specific parameters from thread */
 	int (*get_thread_sched_parameters) ( kthread_t *, sched_t *);
-	
+
 	ksched_params_t params;	/* scheduler specific data */
 };
 

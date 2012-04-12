@@ -218,10 +218,6 @@ enum {
 	SCHED_NUM
 };
 
-#define EDF_SET		1
-#define EDF_WAIT	2
-#define EDF_EXIT	4
-
 /*!
  * Scheduler parameters adjustable by user threads,
  * both per thread and per scheduler (one data type must contain both data)
@@ -237,11 +233,12 @@ typedef struct _sched_rr_t_
 }
 sched_rr_t;
 
-
 /*!
  * EDF scheduler
  */
-
+#define EDF_SET		(1<<0)
+#define EDF_WAIT	(1<<1)
+#define EDF_EXIT	(1<<2)
 
 typedef struct _sched_edf_t_
 {
@@ -251,17 +248,6 @@ typedef struct _sched_edf_t_
 
 }
 sched_edf_t;
-
-//typedef struct _sched_edf_t
-//{
-//	time_t deadline;
-//	time_t period;
-//	time_t next_run;
-//	int flags;
-//
-//	void *edf_alarm;
-//}
-//sched_edf_t;
 
 typedef union _sched_t_
 {

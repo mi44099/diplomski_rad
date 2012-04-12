@@ -107,3 +107,5 @@ void k_free_unique_id ( uint id );
 
 int sys__sysinfo ( void *p );
 int k_list_programs ( char *buffer, size_t buf_size );
+
+void k_memory_fault (); /* memory fault handler */

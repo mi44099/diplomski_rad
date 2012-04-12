@@ -19,6 +19,13 @@ void (*arch_irq_disable) ( unsigned int );
 /*! interrupt handlers */
 static list_t ihandlers[INTERRUPTS];
 
+/*!
+ * interrupted: user program or kernel
+ * (for tracking processor generated interrupts)
+ */
+static int new_mode = KERNEL_MODE;
+static int prev_mode = KERNEL_MODE;
+
 struct ihndlr
 {
 	void *device;
@@ -92,6 +99,9 @@ void arch_interrupt_handler ( int irq_num )
 {
 	struct ihndlr *ih;
 
+	prev_mode = new_mode;
+	new_mode = KERNEL_MODE;
+
 	if ( irq_num < INTERRUPTS && (ih = list_get (&ihandlers[irq_num], FIRST)) )
 	{
 		/* Call registered handlers */
@@ -116,4 +126,17 @@ void arch_interrupt_handler ( int irq_num )
 		LOG ( ERROR, "Unregistered interrupt: %d !\n", irq_num );
 		halt ();
 	}
+
+	prev_mode = new_mode;
+	new_mode = USER_MODE;
+}
+
+int arch_new_mode ()
+{
+	return new_mode;
+}
+
+int arch_prev_mode ()
+{
+	return prev_mode;
 }

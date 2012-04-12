@@ -31,8 +31,6 @@ static list_t procs; /* list of all processes */
 /*! initialize thread structures and create idle thread */
 void kthreads_init ()
 {
-	kthread_t *kthread;
-
 	list_init ( &all_threads );
 	list_init ( &procs );
 
@@ -49,7 +47,7 @@ void kthreads_init ()
 	kernel_proc.m.start = NULL;
 	kernel_proc.m.size = (size_t) 0xffffffff;
 
-	kthread = kthread_create ( idle_thread, NULL, NULL, 0, 0, NULL, 0, 1,
+	(void) kthread_create ( idle_thread, NULL, NULL, 0, 0, NULL, 0, 1,
 				&kernel_proc );
 
 	kthreads_schedule ();
@@ -243,34 +241,39 @@ kthread_t *kthread_create ( void *start_func, void *param, void *exit_func,
  */
 void kthreads_schedule ()
 {
-	int highest;
+	int highest_prio;
 	kthread_t *curr, *next;
 
 	curr = active_thread;
 
-	highest = kthread_ready_list_highest ();
+	highest_prio = kthread_ready_list_highest ();
 
 	/* must exist an thread to return to, 'curr' or first from 'ready' */
-	ASSERT ( ( curr && curr->state == THR_STATE_ACTIVE ) || highest >= 0 );
+	ASSERT ( ( curr && curr->state == THR_STATE_ACTIVE ) ||
+		 highest_prio >= 0 );
 
 	if ( !curr || curr->state != THR_STATE_ACTIVE ||
-		highest > curr->prio )
+	     highest_prio > curr->prio )
 	{
 		if ( curr ) /* change active thread */
 		{
-			//ksched_deactivate_thread ( curr );
+			ksched_deactivate_thread ( curr );
 
 			/* move last active to ready queue, if still ready */
 			if ( curr->state == THR_STATE_ACTIVE )
 				kthread_move_to_ready ( curr, LAST );
+
+			/* deactivation might change ready thread list */
+			highest_prio = kthread_ready_list_highest ();
 		}
 
-		next = kthreadq_remove ( &ready_q[highest], NULL );
+
+		next = kthreadq_remove ( &ready_q[highest_prio], NULL );
 		ASSERT ( next );
 
 		/* no more ready threads in list? */
-		if ( kthreadq_get ( &ready_q[highest] ) == NULL )
-			kthread_ready_list_set_empty ( highest );
+		if ( kthreadq_get ( &ready_q[highest_prio] ) == NULL )
+			kthread_ready_list_set_empty ( highest_prio );
 
 		active_thread = next;
 		active_thread->state = THR_STATE_ACTIVE;
@@ -789,9 +792,9 @@ int kthread_info ()
 
 	kprint ( "Threads info\n" );
 
-	kprint ( "[this]\tid=%d in process at %x, size=%d (%x)\n",
-		  active_thread->id, active_thread->proc->m.start,
-		  active_thread->proc->m.size, active_thread );
+	kprint ( "[this]\tid=%d (desc. at %x) in process at %x, size=%d\n",
+		  active_thread->id, active_thread, active_thread->proc->m.start,
+		  active_thread->proc->m.size );
 
 	kprint ( "\tprio=%d, state=%d, ret_val=%d\n",
 		  active_thread->prio, active_thread->state,
@@ -800,9 +803,9 @@ int kthread_info ()
 	kthread = list_get ( &all_threads, FIRST );
 	while ( kthread )
 	{
-		kprint ( "[%d]\tid=%d in process at %x, size=%d (%x)\n",
-			 i++, kthread->id, kthread->proc->m.start,
-			 kthread->proc->m.size, kthread );
+		kprint ( "[%d]\tid=%d (desc. at %x) in process at %x, size=%d\n",
+			 i++, kthread->id, kthread, kthread->proc->m.start,
+			 kthread->proc->m.size );
 
 		kprint ( "\tprio=%d, state=%d, ret_val=%d\n",
 			 kthread->prio, kthread->state,
@@ -831,7 +834,6 @@ int sys__get_errno ( void *p )
 
 /*! Get-ers, Set-ers and misc ----------------------------------------------- */
 
-
 inline int kthread_is_active ( kthread_t *kthread )
 {
 	if ( kthread->state == THR_STATE_ACTIVE )
@@ -839,8 +841,6 @@ inline int kthread_is_active ( kthread_t *kthread )
 	else
 		return 0;
 }
-
-
 inline void *kthread_get_active ()
 {
 	return (void *) active_thread;
@@ -861,7 +861,6 @@ inline int kthread_get_prio ( kthread_t *kthread )
 }
 int kthread_set_prio ( kthread_t *kthread, int prio )
 {
-
 	kthread_t *kthr = kthread;
 	int old_prio;
 
@@ -877,26 +876,26 @@ int kthread_set_prio ( kthread_t *kthread, int prio )
 	*/
 	switch ( kthr->state )
 	{
-		case THR_STATE_ACTIVE:
-			kthr->prio = prio;
-			kthread_move_to_ready ( kthr, LAST );
-			kthreads_schedule ();
-			break;
+	case THR_STATE_ACTIVE:
+		kthr->prio = prio;
+		kthread_move_to_ready ( kthr, LAST );
+		kthreads_schedule ();
+		break;
 
-		case THR_STATE_READY:
-			kthread_remove_from_ready (kthr);
-			kthr->prio = prio;
-			kthread_move_to_ready ( kthr, LAST );
-			kthreads_schedule ();
-			break;
+	case THR_STATE_READY:
+		kthread_remove_from_ready (kthr);
+		kthr->prio = prio;
+		kthread_move_to_ready ( kthr, LAST );
+		kthreads_schedule ();
+		break;
 
-		case THR_STATE_WAIT: /* as now there is only FIFO queue */
-			kthr->prio = prio;
-			break;
+	case THR_STATE_WAIT: /* as now there is only FIFO queue */
+		kthr->prio = prio;
+		break;
 
-		case THR_STATE_PASSIVE: /* report error or just change priority? */
-			kthr->prio = prio;
-			break;
+	case THR_STATE_PASSIVE: /* report error or just change priority? */
+		kthr->prio = prio;
+		break;
 	}
 
 	return old_prio;
@@ -965,7 +964,7 @@ inline kthread_t *kthreadq_get ( kthread_q *q )
 }
 inline kthread_t *kthreadq_get_next ( kthread_t *kthread )
 {
-	return list_get_next ( &kthread->ql );   //kthread->queue->q.first->object
+	return list_get_next ( &kthread->ql );   /* kthread->queue->q.first->object */
 }
 
 /*! Temporary storage for blocked thread (save specific context before wait) */

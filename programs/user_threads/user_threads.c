@@ -15,13 +15,11 @@ volatile static int thr_num;
 
 int user_threads ( char *args[] )
 {
-	uthread_t *thread;
-
 	uthreads_init ();
 
-	thread = create_uthread ( first, (void *) 1 );
-	thread = create_uthread ( second, (void *) 2 );
-	thread = create_uthread ( third, (void *) 3 );
+	(void) create_uthread ( first, (void *) 1 );
+	(void) create_uthread ( second, (void *) 2 );
+	(void) create_uthread ( third, (void *) 3 );
 	thr_num = 3;
 
 	while (	thr_num > 0 )

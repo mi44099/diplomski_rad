@@ -10,9 +10,10 @@
 /*! Per thread scheduler data */
 typedef struct _ksched_edf_thread_params_t
 {
-	time_t deadline;
+	time_t relative_deadline;
 	time_t period;
 	time_t next_run;
+	time_t active_deadline;
 	int flags;
 
 	void *edf_alarm;		/* kernel alarm reference used in EDF */

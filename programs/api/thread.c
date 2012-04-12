@@ -56,63 +56,63 @@ int start_program ( char *prog_name, thread_t *handle, void *param,
 }
 
 /*! Set thread scheduling parameters */
-int set_sched_params ( thread_t *thread, int sched_policy, int prio,
-		       sched_t *params )
+int set_sched_params ( int sched_policy, sched_t *params )
 {
-	return syscall ( SET_SCHED_PARAMS, thread, sched_policy, prio, params );
+	return syscall ( SET_SCHED_PARAMS, sched_policy, params );
 }
 
 /*! Get thread scheduling parameters */
-int get_sched_params ( thread_t *thread, int *sched_policy, int *prio,
-		       sched_t *params )
+int get_sched_params ( int *sched_policy, sched_t *params )
 {
-	return syscall ( GET_SCHED_PARAMS, thread, sched_policy, prio, params );
+	return syscall ( GET_SCHED_PARAMS, sched_policy, params );
 }
 
 int set_thread_sched_params ( thread_t *thread, int sched_policy, int prio,
-		       sched_t *params )
+			      sched_t *params )
 {
-	return syscall ( SET_THREAD_SCHED_PARAMS, thread, sched_policy, prio, params );
+	return syscall ( SET_THREAD_SCHED_PARAMS, thread, sched_policy, prio,
+			 params );
 }
 
 int get_thread_sched_params ( thread_t *thread, int *sched_policy, int *prio,
-		       sched_t *params )
+			      sched_t *params )
 {
-	return syscall ( GET_THREAD_SCHED_PARAMS, thread, sched_policy, prio, params );
+	return syscall ( GET_THREAD_SCHED_PARAMS, thread, sched_policy, prio,
+			 params );
 }
 
 
 int edf_set ( time_t deadline, time_t period, int flags )
 {
-  sched_t param;
-  thread_t thread;
-  param.edf.deadline = deadline;
-  param.edf.period = period;
-  param.edf.flags = flags | EDF_SET ;
+	sched_t param;
+	thread_t thread;
 
-  thread_self ( &thread );
+	param.edf.deadline = deadline;
+	param.edf.period = period;
+	param.edf.flags = flags | EDF_SET ;
+	thread_self ( &thread );
 
-  return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
+	return set_thread_sched_params ( &thread, SCHED_EDF, 0, &param );
 }
 
-int edf_wait ( time_t deadline, time_t period, int flags )
+int edf_wait ()
 {
-  sched_t param;
-  thread_t thread;
-  param.edf.flags = flags | EDF_WAIT ;
+	sched_t param;
+	thread_t thread;
 
-  thread_self ( &thread );
+	param.edf.flags = EDF_WAIT ;
+	thread_self ( &thread );
 
-  return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
+	return set_thread_sched_params ( &thread, SCHED_EDF, 0, &param );
 }
 
-int edf_exit ( time_t deadline, time_t period, int flags )
+int edf_exit ()
 {
-  sched_t param;
-  thread_t thread;
-  param.edf.flags = flags | EDF_EXIT ;
+	sched_t param;
+	thread_t thread;
 
-  thread_self ( &thread );
+	param.edf.flags = EDF_EXIT ;
+	thread_self ( &thread );
 
-  return set_thread_sched_params ( &thread, SCHED_EDF, THR_DEFAULT_PRIO - 1, &param );
+	return set_thread_sched_params ( &thread, SCHED_EDF, 0, &param );
 }

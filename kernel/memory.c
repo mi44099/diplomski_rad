@@ -4,6 +4,7 @@
 #include "memory.h"
 #include <arch/multiboot.h>
 #include <arch/processor.h>
+#include <arch/interrupts.h>
 #include <kernel/kprint.h>
 #include <kernel/errno.h>
 #include <lib/string.h>
@@ -178,6 +179,7 @@ int sys__sysinfo ( void *p )
 	param = *( (char ***) p );
 	param = U2K_GET_ADR ( param, kthread_get_process (NULL) );
 	param0 = U2K_GET_ADR ( param[0], kthread_get_process (NULL) );
+	/* param0 should be "sysinfo" so actualy its not required */
 
 	if ( param[1] == NULL )
 	{
@@ -343,4 +345,20 @@ void k_memory_info ()
 
 	kprint ( "* Kernel heap:       %x, size=%x\n",
 		  k_heap.start, k_heap.size );
+}
+
+void k_memory_fault ()
+{
+	LOG ( ERROR, "General Protection Fault!!!\n");
+
+	if ( arch_prev_mode () == KERNEL_MODE )
+	{
+		LOG ( ERROR, "PANIC: kernel caused GPF!\n");
+		halt ();
+	}
+	else {
+		/* terminate active thread */
+		LOG ( ERROR, "Thread caused GPF, terminating!\n");
+		sys__thread_exit ( NULL );
+	}
 }

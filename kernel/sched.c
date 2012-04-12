@@ -4,7 +4,6 @@
 #include "sched.h"
 #include <kernel/errno.h>
 
-
 extern ksched_t ksched_rr;
 extern ksched_t ksched_edf;
 
@@ -18,8 +17,8 @@ static ksched_t *ksched[] = {
 /*! Get pointer to ksched_t parameters for requested scheduling policy */
 ksched_t *ksched_get ( int sched_policy )
 {
-
 	ASSERT ( sched_policy >= 0 && sched_policy < SCHED_NUM );
+
 	return ksched[sched_policy];
 }
 
@@ -61,6 +60,7 @@ int ksched_thread_add ( kthread_t *kthread, int sched_policy )
 	ASSERT ( sched_policy >= 0 && sched_policy < SCHED_NUM );
 
 	tsched->sched_policy = sched_policy;
+	tsched->activated = 0;
 
 	if ( ksched[sched_policy] && ksched[sched_policy]->thread_add )
 		ksched[sched_policy]->thread_add ( kthread );
@@ -118,6 +118,9 @@ int ksched_deactivate_thread ( kthread_t *kthread )
 	return activated;
 }
 
+
+/*! Interface to threads ---------------------------------------------------- */
+
 /*! Set thread scheduling parameters */
 int sys__set_thread_sched_params ( void *p )
 {
@@ -128,7 +131,6 @@ int sys__set_thread_sched_params ( void *p )
 	sched_t *params;
 	//other variables
 	kthread_t *kthread;
-	kthread_sched_data_t *tsched;
 
 	thread = *( (void **) p ); p += sizeof (void *);
 	thread = U2K_GET_ADR ( thread, kthread_get_process (NULL) );
@@ -138,29 +140,26 @@ int sys__set_thread_sched_params ( void *p )
 				E_INVALID_HANDLE );
 
 	sched_policy = *( (int *) p ); p += sizeof (int);
-
 	ASSERT_ERRNO_AND_EXIT ( sched_policy > 0 && sched_policy < SCHED_NUM,
 			       E_INVALID_HANDLE );
 
 	prio = *( (int *) p ); p += sizeof (int);
-	ASSERT_ERRNO_AND_EXIT ( prio > 0 && prio < PRIO_LEVELS,
+	ASSERT_ERRNO_AND_EXIT ( prio >= 0 && prio < PRIO_LEVELS,
 			       E_INVALID_HANDLE );
 
 	params = *( (void **) p ); p += sizeof (void *);
 	params = U2K_GET_ADR ( params, kthread_get_process (NULL) );
 
 	/* set new scheduling parameters */
-	tsched = kthread_get_sched_param (kthread);
-
 	ksched_set_thread_policy ( kthread, sched_policy );
 
-	kthread_set_prio ( kthread, prio );
+	if ( prio > 0 )
+		kthread_set_prio ( kthread, prio );
 
 	if ( params && ksched[sched_policy] &&
 	     ksched[sched_policy]->set_thread_sched_parameters )
 		ksched[sched_policy]->set_thread_sched_parameters ( kthread,
 								    params );
-
 
 	return 0;
 }
@@ -225,7 +224,6 @@ int sys__set_sched_params ( void *p )
 	//parameters on thread stack
 	int sched_policy;
 	sched_t *params;
-	//other variables
 
 	sched_policy = *( (int *) p ); p += sizeof (int);
 	ASSERT_ERRNO_AND_EXIT ( sched_policy > 0 && sched_policy < SCHED_NUM,

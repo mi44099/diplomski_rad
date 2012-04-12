@@ -27,11 +27,20 @@ void arch_return_to_thread (); /* defined in interrupts.S */
 extern void (*arch_irq_enable) ( unsigned int irq );
 extern void (*arch_irq_disable) ( unsigned int irq );
 
+int arch_new_mode ();
+int arch_prev_mode ();
+
 #endif /* ASM_FILE */
 
 /* Programmable Interrupt controllers (currently implemented only one, i8259) */
 #include <arch/devices/i8259.h>
 
 /* Constants */
+#define KERNEL_MODE		0
+#define USER_MODE		-1
+
+#define INT_STF			12	/* Stack Fault */
+#define INT_GPF			13	/* General Protection Fault */
+
 #define SOFTWARE_INTERRUPT	SOFT_IRQ
 #define INTERRUPTS		NUM_IRQS

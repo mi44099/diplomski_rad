@@ -14,15 +14,14 @@ int thread_self ( thread_t *thr );
 int start_program ( char *prog_name, thread_t *handle, void *param,
 		    int sched, int prio );
 
-int set_sched_params ( thread_t *thread, int sched_policy, int prio,
-		       sched_t *params );
-int get_sched_params ( thread_t *thread, int *sched_policy, int *prio,
-		       sched_t *params );
+int set_sched_params ( int sched_policy, sched_t *params );
+int get_sched_params ( int *sched_policy, sched_t *params );
+
 int set_thread_sched_params ( thread_t *thread, int sched_policy, int prio,
-		       sched_t *params );
+			      sched_t *params );
 int get_thread_sched_params ( thread_t *thread, int *sched_policy, int *prio,
-		       sched_t *params );
+			      sched_t *params );
 
 int edf_set ( time_t deadline, time_t period, int flags );
-int edf_wait ( time_t deadline, time_t period, int flags );
-int edf_exit ( time_t deadline, time_t period, int flags );
+int edf_wait ();
+int edf_exit ();

@@ -49,6 +49,7 @@ semaphores	= 0x10000 0x10000 0x1000 semaphores	programs/semaphores
 monitors	= 0x10000 0x10000 0x1000 monitors	programs/monitors
 messages	= 0x10000 0x10000 0x1000 messages	programs/messages
 shell		= 0x10000 0x10000 0x1000 shell		programs/shell
+segm_fault	= 0x10000 0x10000 0x1000 segm_fault	programs/segm_fault
 rr		= 0x10000 0x10000 0x1000 round_robin	programs/round_robin
 edf		= 0x10000 0x10000 0x1000 edf		programs/earliest_deadline_first
 

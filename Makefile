@@ -125,7 +125,7 @@ clean_all cleanall:
 # starting compiled system in 'qemu' emulator
 qemu: $(CDIMAGE)
 	@echo Starting...
-	@-qemu -no-kvm -cdrom $(CDIMAGE) -serial stdio
+	@qemu -m 4 -no-kvm -cdrom $(CDIMAGE) -serial stdio
 
 # DEBUGGING
 # For debugging to work: include '-g' in CFLAGS and omit -s and -S from LDFLAGS
@@ -134,7 +134,7 @@ qemu: $(CDIMAGE)
 # Start debugging from two consoles: 1st: make debug_qemu 2nd: make debug_gdb
 debug_qemu: $(CDIMAGE)
 	@echo Starting qemu ...
-	@qemu -s -S -no-kvm -cdrom $(CDIMAGE) -serial stdio
+	@qemu -m 4 -s -S -no-kvm -cdrom $(CDIMAGE) -serial stdio
 debug_gdb: $(CDIMAGE)
 	@echo Starting gdb ...
 	@gdb -s $(KERNEL_IMG) -ex 'target remote localhost:1234'

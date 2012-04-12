@@ -5,18 +5,15 @@
 #include <api/time.h>
 #include <arch/processor.h>
 
-char PROG_HELP[] = "Thread demonstration example: create several threads that "
-		   "perform simple iterations and print basic info.";
+char PROG_HELP[] = "EDF scheduling demonstration example";
 
-#define THR_NUM	3
-#define TEST_DURATION	10 /* seconds */
+#define THR_NUM	1
 
 
 /* example threads */
 static void edf_thread ( void *param )
 {
-	int thr_no, i, j, k = 3;
-	time_t sleep;
+	int thr_no, i, j;
 	thr_no = (int) param;
 	time_t period, deadline;
 
@@ -26,50 +23,37 @@ static void edf_thread ( void *param )
 	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
 
-	print ( "EDF thread %d setting\n", thr_no );
+	print ( "Thread %d calling EDF_SET\n", thr_no );
 	edf_set ( deadline, period, EDF_SET );
 
-	while ( k-- > 0 )
+	for ( i = 0; i < 3; i++ )
 	{
-		print ( "\nThread %d call EDF_WAIT\n", thr_no );
-		edf_wait ( deadline, period, EDF_WAIT );
+		print ( "Thread %d calling EDF_WAIT\n", thr_no );
+		edf_wait ();
 
-		print( "\nThread %d is running\n", thr_no );
+		print( "Thread %d running\n", thr_no );
 		for ( j = 1; j <= 10000000; j++ )
 			memory_barrier();
 	}
 
-	print ( "\nEDF thread %d exiting\n", thr_no );
-	edf_exit ( deadline, period, EDF_EXIT );
+	print ( "Thread %d calling EDF_EXIT\n", thr_no );
+	edf_exit ();
 }
 
 int edf ( char *args[] )
 {
 	thread_t thread[THR_NUM + 1];
 	int i;
-	time_t sleep;
 
-	sleep.sec = 1;
-	sleep.nsec = 0;
-
-	for ( i = 1; i <= THR_NUM; i++ )
+	for ( i = 0; i < THR_NUM; i++ )
 	{
-		create_thread ( edf_thread, (void *) i, SCHED_EDF, THR_DEFAULT_PRIO - 1, &thread[i] );
-		//delay( &sleep );
+		create_thread ( edf_thread, (void *) (i+1), SCHED_EDF,
+				THR_DEFAULT_PRIO - 1, &thread[i] );
 	}
 
-	//print ( "Threads created!!\n\n" );
 
-
-	for ( i = 1; i <= THR_NUM; i++ )
+	for ( i = 0; i < THR_NUM; i++ )
 		wait_for_thread ( &thread[i], IPC_WAIT );
-
-//	while(1);
-
-	for ( i = 1; i <= THR_NUM; i++ )
-		print ( "Thread %d\n", i );
-
-//	while(1);
 
 	return 0;
 }

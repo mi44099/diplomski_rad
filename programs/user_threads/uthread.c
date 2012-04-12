@@ -41,14 +41,10 @@ uthread_t *create_uthread ( void (func) (void *), void *param )
 
 void uthread_exit ()
 {
-	size_t space_for_mem_alloc_hdr[16]; /* just in case ... */
 	uthread_t *cur_thread, *new_thread, tmp;
 
 	/* active thread is exiting */
 	cur_thread = list_remove ( &active, FIRST, NULL );
-
-	space_for_mem_alloc_hdr[0] = (size_t) cur_thread;
-	/*remove compiler 'not-used' warning */
 
 	free ( cur_thread->stack );
 	/* freeing it, but using it still - till the end of this function
