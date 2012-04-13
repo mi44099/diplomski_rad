@@ -27,9 +27,10 @@ INCLUDES_K := . programs arch/$(PLATFORM)
 KERNEL_FILE_NAME = kernel.elf
 KERNEL_IMG = $(BUILDDIR)/$(KERNEL_FILE_NAME)
 
-K_INIT_PROG = shell
+K_INIT_PROG = edf
+#K_INIT_PROG = shell
 
-CMACROS_K := $(CMACROS) ASSERT_H=\<kernel/errno.h\>	\
+CMACROS_K := $(CMACROS) DEBUG ASSERT_H=\<kernel/errno.h\> \
 		K_INIT_PROG=\"$(K_INIT_PROG)\"
 
 #------------------------------------------------------------------------------

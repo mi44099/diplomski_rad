@@ -8,6 +8,7 @@
 char PROG_HELP[] = "EDF scheduling demonstration example";
 
 #define THR_NUM	3
+#define TEST_DURATION	10 /* seconds */
 
 void message ( int thread, char *action )
 {
@@ -34,13 +35,13 @@ static void edf_thread ( void *param )
 	message ( thr_no, "EDF_SET" );
 	edf_set ( deadline, period, EDF_SET );
 
-	for ( i = 0; i < 3; i++ )
+	for ( i = 0; ; i++ )
 	{
 		message ( thr_no, "EDF_WAIT" );
 		edf_wait ();
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 10000000; j++ )
+		for ( j = 1; j <= 60000000; j++ )
 			memory_barrier();
 	}
 
@@ -52,6 +53,7 @@ int edf ( char *args[] )
 {
 	thread_t thread[THR_NUM + 1];
 	int i;
+	time_t sleep;
 
 	for ( i = 0; i < THR_NUM; i++ )
 	{
@@ -59,7 +61,14 @@ int edf ( char *args[] )
 				THR_DEFAULT_PRIO - 1, &thread[i] );
 	}
 
+	print ( "Threads created, giving them %d seconds\n", TEST_DURATION );
+	sleep.sec = TEST_DURATION;
+	sleep.nsec = 0;
+	delay ( &sleep );
+	print ( "Test over - threads are to be canceled\n");
 
+	for ( i = 0; i < THR_NUM; i++ )
+		cancel_thread ( &thread[i] );
 	for ( i = 0; i < THR_NUM; i++ )
 		wait_for_thread ( &thread[i], IPC_WAIT );
 

@@ -28,7 +28,7 @@ typedef struct _kthread_sched_data_t_ kthread_sched_data_t; /* included in kthre
 union _kthread_sched_params_t_
 {
 	ksched_rr_thread_params rr;	/* Round Robin per thread data */
-	ksched_edf_thread_params_t edf;	
+	ksched_edf_thread_params_t edf;
 
 	/* add others thread scheduling parameters for other schedulers that
 	   require parameters */
@@ -56,7 +56,8 @@ struct _kthread_sched_data_t_
 int ksched_set_thread_policy ( kthread_t *kthread, int new_policy );
 
 int ksched_thread_add ( kthread_t *kthread, int sched_policy );
-int ksched_thread_remove ( kthread_t *kthread, int sched_policy );
+/*int ksched_thread_remove ( kthread_t *kthread, int sched_policy );*/
+int ksched_thread_remove ( kthread_t *kthread );
 
 int ksched_activate_thread ( kthread_t *kthread );
 int ksched_deactivate_thread ( kthread_t *kthread );

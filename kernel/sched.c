@@ -41,13 +41,16 @@ int ksched_set_thread_policy ( kthread_t *kthread, int new_policy )
 	ASSERT ( old_policy >= 0 && old_policy < SCHED_NUM );
 	ASSERT ( new_policy >= 0 && new_policy < SCHED_NUM );
 
-	if ( ksched[old_policy] && ksched[old_policy]->thread_remove )
-		ksched[old_policy]->thread_remove ( kthread );
+	if ( old_policy != new_policy )
+	{
+		if ( ksched[old_policy] && ksched[old_policy]->thread_remove )
+			ksched[old_policy]->thread_remove ( kthread );
 
-	tsched->sched_policy = new_policy;
+		tsched->sched_policy = new_policy;
 
-	if ( ksched[new_policy] && ksched[new_policy]->thread_add )
-		ksched[new_policy]->thread_add ( kthread );
+		if ( ksched[new_policy] && ksched[new_policy]->thread_add )
+			ksched[new_policy]->thread_add ( kthread );
+	}
 
 	return old_policy;
 }
@@ -68,13 +71,23 @@ int ksched_thread_add ( kthread_t *kthread, int sched_policy )
 	return 0;
 }
 /*! Remove thread from scheduling policy (if required by policy) */
-int ksched_thread_remove ( kthread_t *kthread, int sched_policy )
+/*int ksched_thread_remove ( kthread_t *kthread, int sched_policy )
 {
 	kthread_sched_data_t *tsched = kthread_get_sched_param (kthread);
 
 	ASSERT ( sched_policy >= 0 && sched_policy < SCHED_NUM );
 
 	ASSERT ( tsched->sched_policy == sched_policy );
+
+	if ( ksched[sched_policy] && ksched[sched_policy]->thread_remove )
+		ksched[sched_policy]->thread_remove ( kthread );
+
+	return 0;
+}*/
+int ksched_thread_remove ( kthread_t *kthread )
+{
+	kthread_sched_data_t *tsched = kthread_get_sched_param (kthread);
+	int sched_policy = tsched->sched_policy;
 
 	if ( ksched[sched_policy] && ksched[sched_policy]->thread_remove )
 		ksched[sched_policy]->thread_remove ( kthread );

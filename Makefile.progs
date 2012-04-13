@@ -24,7 +24,8 @@ BUILD_U := $(BUILDDIR)/progs
 DIRS_U := programs/api $(LIBS)
 INCLUDES_U := . programs arch/$(PLATFORM)
 
-CMACROS_U := $(CMACROS) ASSERT_H=\<api/errno.h\>
+#CMACROS_U := $(CMACROS) ASSERT_H=\<api/errno.h\>
+CMACROS_U := $(CMACROS) DEBUG ASSERT_H=\<api/errno.h\>
 
 #------------------------------------------------------------------------------
 # Memory

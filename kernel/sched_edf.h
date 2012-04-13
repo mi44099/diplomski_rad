@@ -23,7 +23,7 @@ ksched_edf_thread_params_t;
 /*! edf global parameters */
 typedef struct _ksched_edf_t_
 {
-	kthread_t *active;
+	kthread_t *active; /* thread selected by EDF as top priority */
 
 	kthread_q ready;
 	kthread_q wait;

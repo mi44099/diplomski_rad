@@ -49,10 +49,30 @@ static int edf_init ( ksched_t *self )
 }
 static int edf_thread_add ( kthread_t *kthread )
 {
+	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+
+	tsched->params.edf.edf_alarm = NULL;
+	//LOG( DEBUG, "%x [edf_add]", kthread );
+
 	return 0;
 }
 static int edf_thread_remove ( kthread_t *kthread )
 {
+	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+	ksched_t *gsched = ksched_get ( tsched->sched_policy );
+
+	//LOG( DEBUG, "%x [edf_del]", kthread );
+
+	if ( gsched->params.edf.active == kthread )
+		gsched->params.edf.active = NULL;
+
+	if ( tsched->params.edf.edf_alarm )
+		k_alarm_remove ( tsched->params.edf.edf_alarm );
+
+	tsched->sched_policy = SCHED_FIFO;
+
+	k_edf_schedule ();
+
 	return 0;
 }
 static int edf_set_sched_parameters ( int sched_policy, sched_t *params )
@@ -71,11 +91,14 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
 	ksched_t *gsched = ksched_get ( tsched->sched_policy );
 
+	if ( gsched->params.edf.active == kthread )
+		gsched->params.edf.active = NULL;
+
 	k_get_time ( &now );
 
 	if ( params->edf.flags == EDF_SET )
 	{
-		/* LOG( DEBUG, "%x [SET]\n", kthread ); --OVAKO DEBUGIRATI */
+		/*LOG( DEBUG, "%x [SET]", kthread );*/
 		tsched->params.edf.period = params->edf.period;
 		tsched->params.edf.relative_deadline = params->edf.deadline;
 		tsched->params.edf.flags = params->edf.flags ^ EDF_SET;
@@ -124,7 +147,7 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 			/* wait till "next_run" */
 			kthread_enqueue ( kthread, &gsched->params.edf.wait );
 			kthreads_schedule (); /* will call edf_schedule() */
-			LOG( DEBUG, "%x [WAIT]", kthread );
+			//LOG( DEBUG, "%x [WAIT]", kthread );
 		}
 		else {
 			/* "next_run" has already come,
@@ -132,7 +155,7 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 			 */
 			kthread_enqueue ( kthread, &gsched->params.edf.ready );
 			kthreads_schedule (); /* will call edf_schedule() */
-			LOG( DEBUG, "%x [WAIT]", kthread );
+			//LOG( DEBUG, "%x [WAIT]", kthread );
 		}
 	}
 	else if ( params->edf.flags == EDF_EXIT )
@@ -158,14 +181,23 @@ static int edf_get_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 
 static int k_edf_schedule ()
 {
-	kthread_t *first, *next;
+	kthread_t *first, *next, *edf_active;
 	kthread_sched_data_t *sch_first, *sch_next;
 	ksched_t *gsched = ksched_get ( SCHED_EDF );
 	int retval = 0;
 
-	next = first = kthreadq_get ( &gsched->params.edf.ready );
+	edf_active = first = gsched->params.edf.active;
+	next = kthreadq_get ( &gsched->params.edf.ready );
+	/*LOG( DEBUG, "%x [active]", first );
+	LOG( DEBUG, "%x [first]", next );*/
 
-	while ( first != NULL && (next = kthreadq_get_next ( next )) != NULL )
+	if ( first == NULL )
+	{
+		first = next;
+		next = kthreadq_get_next ( next );
+	}
+
+	while ( first != NULL && next != NULL )
 	{
 
 		sch_first = kthread_get_sched_param ( first );
@@ -176,14 +208,43 @@ static int k_edf_schedule ()
 		{
 			first = next;
 		}
+
+		next = kthreadq_get_next ( next );
 	}
 
-	if ( first )
+	if ( first && first != edf_active )
 	{
 		(void) kthreadq_remove ( &gsched->params.edf.ready, first );
+
+		if ( edf_active )
+		{
+			LOG( DEBUG, "%x [EDF_SCHED_PREEMPT]", first );
+
+			/*
+			 * change active EDF thread:
+			 * -remove it from active/ready list
+			 * -put it into edf.ready list
+			 */
+			if ( kthread_is_ready (edf_active) )
+			{
+				if ( !kthread_is_active (edf_active) )
+					kthread_remove_from_ready (edf_active);
+
+				kthread_enqueue ( edf_active,
+						  &gsched->params.edf.ready );
+			}
+			else
+			{
+				/* thread is blocked - leave it there */
+			}
+		}
+
 		kthread_move_to_ready ( first, LAST );
 		retval = 1;
 	}
+
+	gsched->params.edf.active = first;
+	/*LOG( DEBUG, "%x [first]", first );*/
 
 	return retval;
 }
@@ -193,14 +254,14 @@ static void edf_timer ( void *p )
 {
 	kthread_t *kthread = p;
 
-	LOG( DEBUG, "%x [Alarm]", kthread );
+	//LOG( DEBUG, "%x [Alarm]", kthread );
 
 	if( kthread && kthreadq_remove ( &ksched_edf.params.edf.wait, kthread ))
 	{
 		if ( edf_check_deadline ( kthread ) )
 			return;
 
-		LOG( DEBUG, "%x [Alarm]", kthread );
+		/*LOG( DEBUG, "%x [Alarm]", kthread );*/
 		kthread_enqueue ( kthread, &ksched_edf.params.edf.ready );
 
 		k_edf_schedule ();

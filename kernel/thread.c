@@ -267,7 +267,6 @@ void kthreads_schedule ()
 			highest_prio = kthread_ready_list_highest ();
 		}
 
-
 		next = kthreadq_remove ( &ready_q[highest_prio], NULL );
 		ASSERT ( next );
 
@@ -486,6 +485,10 @@ int kthread_cancel ( kthread_t *kthread, int exit_status )
 #ifdef	MESSAGES
 	k_msgq_clean ( &kthread->msg.msgq );
 #endif
+
+	/* remove it from its scheduler */
+	ksched_thread_remove ( kthread );
+
 	/* release thread stack */
 	if ( kthread->stack )
 	{
