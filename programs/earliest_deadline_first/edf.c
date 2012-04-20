@@ -41,7 +41,7 @@ static void edf_thread ( void *param )
 		edf_wait ();
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 60000000; j++ )
+		for ( j = 1; j <= 45000000; j++ )
 			memory_barrier();
 	}
 

@@ -297,5 +297,17 @@ static int edf_check_deadline ( kthread_t *kthread )
 	/* TODO
 	 * Check if "now" is greater than "active_deadline"
 	 */
+
+	time_t now;
+	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+
+	k_get_time ( &now );
+
+	if ( time_cmp ( &now, &tsched->params.edf.active_deadline ) > 0 )
+	{
+		LOG( DEBUG, "%x [DEADLINE OVERRUN]", kthread );
+		return -1;
+	}
+
 	return 0;
 }
