@@ -107,7 +107,7 @@ inline int goto_xy ( int x, int y )
  * Formated output to console (lightweight version of 'printf')
  * int print ( char *format, ... ) - defined in lib/print.h
  */
-#define PRINT_NAME		print
+#define PRINT_FUNCTION_NAME	print
 #define PRINT_ATTRIBUT		USER_FONT
 #define DEVICE_SEND(TEXT,SZ)	syscall ( DEVICE_SEND, &TEXT, SZ,	\
 					  PRINTSTRING, pi.stdout );

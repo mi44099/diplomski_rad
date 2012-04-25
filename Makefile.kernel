@@ -30,7 +30,7 @@ KERNEL_IMG = $(BUILDDIR)/$(KERNEL_FILE_NAME)
 K_INIT_PROG = edf
 #K_INIT_PROG = shell
 
-# if using USE_SSE turn optimization on: flag -On (n>0) i CFLAGS
+# if using USE_SSE turn optimization on: flag -On (n>0) in CFLAGS
 # otherwise will not work! (bug somewhere - problems with context save/restore)
 
 #CMACROS_K := $(CMACROS) USE_SSE DEBUG ASSERT_H=\<kernel/errno.h\>

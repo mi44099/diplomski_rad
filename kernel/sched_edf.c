@@ -276,7 +276,7 @@ static int k_edf_schedule ()
 				if ( !kthread_is_active (edf_active) )
 				{
 					kthread_remove_from_ready (edf_active);
-					
+
 					/*
 					 * set "deactivated" flag, don't need
 					 * another call to "edf_schedule"
@@ -320,9 +320,9 @@ static void edf_timer ( void *p )
 		if ( edf_check_deadline ( kthread ) )
 		{
 			ASSERT ( !kthread_is_ready (kthread) );
-			
+
 			LOG( DEBUG, "%x [Waked, but too late]", kthread );
-			
+
 			tsched = kthread_get_sched_param ( kthread );
 			k_alarm_remove ( tsched->params.edf.edf_alarm );
 			tsched->params.edf.edf_alarm = NULL;

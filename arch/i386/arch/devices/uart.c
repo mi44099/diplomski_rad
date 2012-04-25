@@ -130,8 +130,6 @@ static int uart_config ( device_t *dev, uart_t *params )
 	up->inf = up->inl = up->insz = 0;
 	up->outf = up->outl = up->outsz = 0;
 
-	//up->initialized = TRUE;
-
 	return 0;
 }
 

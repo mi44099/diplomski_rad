@@ -41,7 +41,7 @@ gma_t *gma_init ( void *memory_segment, size_t size, size_t min_chunk_size,
 	}
 
 	/* minimal chunk size must be at least large as header for free chunk */
-	if ( min_chunk_size == 0 )
+	if ( min_chunk_size == 0 ) /* if not set */
 		min_chunk_size = DEF_MIN_CHUNK_SIZE;
 
 	if ( min_chunk_size >= MIN_CHUNK_SIZE )
@@ -81,15 +81,16 @@ gma_t *gma_init ( void *memory_segment, size_t size, size_t min_chunk_size,
 
 /*!
  * Memory allocation for chunk of size 'size'
- * \param mpool Memory pool pointer, or NULL (then will use default)
+ * \param mpool Memory pool pointer, or NULL (for default)
  * \param size Requested memory chunk size
- * \return allocated chunk address (after header), NULL if don't have it
+ * \return allocated chunk address (after header),
+           NULL if don't have enough free memory
  */
 void *gma_alloc ( gma_t *mpool, size_t size )
 {
 	size_t fl, sl;
 	mchunk_t *chunk, *remainder;
-//LOG (Z,"[%d=>", size );
+
 	ASSERT ( size > 0 && size < MAX_CHUNK_SIZE );
 
 	if ( mpool == NULL )
@@ -106,23 +107,14 @@ void *gma_alloc ( gma_t *mpool, size_t size )
 	if ( !( chunk = remove_first_chunk_from_free_list ( mpool, fl, sl ) ) )
 		return NULL;
 
-ASSERT ( CHUNK_IS_ALIGNED (chunk) );
-
 	if ( GET_CHUNK_SIZE ( chunk ) >= size + mpool->min_chunk_size )
 	{
 		remainder = split_chunk_at ( chunk, size );
-
-ASSERT ( CHUNK_IS_ALIGNED (chunk) );
-ASSERT ( CHUNK_IS_ALIGNED (remainder) );
 
 		insert_chunk_in_free_list ( mpool, remainder );
 	}
 
 	SET_CHUNK_IN_USE(chunk);
-
-ASSERT ( CHUNK_IS_ALIGNED (chunk) );
-
-//LOG (Z,"%d]", GET_CHUNK_SIZE ( chunk ) );
 
 	return GET_CHUNK_USABLE_ADDR ( chunk );
 }
@@ -136,10 +128,6 @@ int gma_free ( gma_t *mpool, void *address )
 	mchunk_t *chunk, *before, *after;
 
 	chunk = GET_CHUNK_HDR_FROM_USABLE_ADDR ( address );
-
-//LOG (F,"(%d)", GET_CHUNK_SIZE ( chunk ) );
-	//ASSERT ( address && CHUNK_IS_ALIGNED (chunk) &&
-	//	 GET_CHUNK_INUSE (chunk) && !IS_BORDER_CHUNK (chunk) );
 
 	ASSERT ( address );
 	ASSERT ( GET_CHUNK_INUSE (chunk) );
@@ -155,17 +143,16 @@ int gma_free ( gma_t *mpool, void *address )
 	if ( before && !GET_CHUNK_INUSE ( before ) )
 	{
 		remove_chunk_from_free_list ( mpool, before );
-		chunk = JOIN_CHUNKS ( before, chunk );
+		JOIN_CHUNKS ( before, chunk );
+		chunk = before;
 	}
-ASSERT ( CHUNK_IS_ALIGNED (chunk) );
 
 	after = GET_CHUNK_AFTER ( chunk );
 	if ( after && !GET_CHUNK_INUSE ( after ) )
 	{
 		remove_chunk_from_free_list ( mpool, after );
-		chunk = JOIN_CHUNKS ( chunk, after );
+		JOIN_CHUNKS ( chunk, after );
 	}
-ASSERT ( CHUNK_IS_ALIGNED (chunk) );
 
 	insert_chunk_in_free_list ( mpool, chunk );
 
@@ -184,16 +171,16 @@ ASSERT ( CHUNK_IS_ALIGNED (chunk) );
  * \return 0 when successful, -1 when size is out of range
  */
 static int get_indexes ( gma_t *mpool, size_t size, size_t *fl, size_t *sl,
-			 int ins )
+			 int insert )
 {
 	size_t bits;
 
-	ASSERT ( fl && sl );
+	ASSERT( fl && sl && size >= MIN_CHUNK_SIZE && CHUNK_IS_ALIGNED(size) );
 
-	if ( !ins && size >= EXACT_LIMIT_SIZE )
+	if ( !insert && size >= EXACT_LIMIT_SIZE )
 		size += ( 1 << ( msb_index ( size ) - L ) ) - 1;
 		/* if searching for free block, add "little" to size so that we
-		   search in right list */
+		   search in right list - see previous short explanation */
 
 	*fl = msb_index ( size );
 
@@ -207,7 +194,7 @@ static int get_indexes ( gma_t *mpool, size_t size, size_t *fl, size_t *sl,
 
 	*fl -= mpool->fl_min; /* returned 'fl' is prepared as index */
 
-	if ( !ins )
+	if ( !insert )
 	{
 		/* Is calculated list non-empty? Or do we need to search
 		   forward, in lists that have larger chunks? */
@@ -239,7 +226,7 @@ static inline void set_list_have_chunks ( gma_t *mpool, size_t fl, size_t sl )
 static inline void clear_list_have_chunks ( gma_t *mpool, size_t fl, size_t sl )
 {
 	mpool->SL_bitmap[fl] &= ~( ((size_t) 1) << sl );
-	if ( !mpool->SL_bitmap[fl] )
+	if ( !mpool->SL_bitmap[fl] ) /* all bits are zero? */
 		mpool->FL_bitmap &= ~( ((size_t) 1) << fl );
 }
 

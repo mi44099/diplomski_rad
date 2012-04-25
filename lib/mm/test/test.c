@@ -6,28 +6,22 @@
 #include <string.h>
 #include <time.h>
 
-#ifndef CLOCK_REALTIME
-#define CLOCK_REALTIME 0
-struct timespec { long tv_sec; long tv_nsec; };
-#endif /* CLOCK_REALTIME */
 
-#define ERROR(format, ...)	\
-	printf ( "[ERROR:%s:%d]" format, __FILE__, __LINE__, ##__VA_ARGS__)
+#include <pthread.h>
 
-#define LOG(level, format, ...)	\
-printf ( "[" #level ":%s:%d]" format "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+//#ifndef CLOCK_REALTIME
+//#define CLOCK_REALTIME 0
+//struct timespec { long tv_sec; long tv_nsec; };
+//#endif /* CLOCK_REALTIME */
 
-#define ASSERT(expr)					\
-do if ( !( expr ) )					\
-{							\
-	printf ( "[BUG:%s:%d]\n", __FILE__, __LINE__);	\
-	exit (1);					\
-} while(0)
-
-#undef NULL
 #if defined ( FIRST_FIT )
 
-#include "../ff_simple.c"
+/*! interface */
+typedef void ffs_mpool_t;
+
+void *ffs_init ( void *mem_segm, size_t size );
+void *ffs_alloc ( ffs_mpool_t *mpool, size_t size );
+int ffs_free ( ffs_mpool_t *mpool, void *chunk_to_be_freed );
 
 #define	MEM_INIT(ADDR, SIZE)		ffs_init ( ADDR, SIZE )
 #define MEM_ALLOC(MP, SIZE)		ffs_alloc ( MP, SIZE )
@@ -35,13 +29,21 @@ do if ( !( expr ) )					\
 
 #elif defined ( GMA )
 
-#include "../gma.c"
+#define gma_t	void
+
+gma_t *gma_init ( void *memory_segment, size_t size, size_t min_chunk_size,
+		    uint flags );
+void *gma_alloc ( gma_t *mpool, size_t size );
+int gma_free ( gma_t *mpool, void *address );
 
 #define	MEM_INIT(ADDR, SIZE)		gma_init ( ADDR, SIZE, 32, 0 )
 #define MEM_ALLOC(MP, SIZE)		gma_alloc ( MP, SIZE )
 #define MEM_FREE(MP, ADDR)		gma_free ( MP, ADDR )
 
 #endif
+
+//#define PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#define PRINT(format, ...)
 
 /* testing */
 int main ()
@@ -95,13 +97,13 @@ int main ()
 			used++;
 			inuse += m[j].size;
 
-			printf ( "%u %u %ld\n", (unsigned int) m[j].ptr, m[j].size,
+			PRINT ( "%u %u %ld\n", (unsigned int) m[j].ptr, m[j].size,
 				 (t2.tv_sec - t1.tv_sec) * 1000000000 + t2.tv_nsec - t1.tv_nsec );
 		}
 		else {
 			fail++;
-			printf("[%d] alloc=%p\t[%u]\n", j, m[j].ptr, m[j].size);
-			printf ( "FAIL(%d)\n", fail );
+			PRINT("[%d] alloc=%p\t[%u]\n", j, m[j].ptr, m[j].size);
+			PRINT ( "FAIL(%d)\n", fail );
 
 			break;
 		}
@@ -142,7 +144,7 @@ int main ()
 				used++;
 				inuse += m[j].size;
 
-				printf ( "%u %ud %ld\n", (unsigned int) m[j].ptr, m[j].size,
+				PRINT ( "%u %ud %ld\n", (unsigned int) m[j].ptr, m[j].size,
 					 (t2.tv_sec - t1.tv_sec) * 1000000000 + t2.tv_nsec - t1.tv_nsec );
 			}
 			else {

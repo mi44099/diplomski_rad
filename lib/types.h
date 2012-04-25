@@ -5,8 +5,12 @@
 #include <arch/types.h>
 
 #if __WORD_SIZE >= 32
+
+#ifndef MEM_TEST
 typedef word_t	size_t;
 typedef sword_t	ssize_t;
+#endif
+
 #else /* size_t must be 32 bits or more */
 typedef uint32 size_t;
 typedef uint32 ssize_t;

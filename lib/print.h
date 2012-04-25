@@ -5,7 +5,7 @@
  *
  * For example, kernel/print.c, before including this header must define:
  *
- * #define PRINT_NAME		kprint
+ * #define PRINT_FUNCTION_NAME		kprint
  * #define PRINT_ATTRIBUT	KERNEL_FONT
  * #define DEVICE_SEND(TEXT,SZ)	k_device_send(&TEXT, SZ, PRINTSTRING, k_stdout);
  *
@@ -34,7 +34,7 @@ do {							\
 while (0)
 
 /*! Formated output to console (lightweight version of 'printf') */
-int PRINT_NAME ( char *format, ... )
+int PRINT_FUNCTION_NAME ( char *format, ... )
 {
 	char **arg = &format;
 	int c;

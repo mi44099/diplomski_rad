@@ -49,7 +49,6 @@ do {	if ( !( expr ) )			\
 
 #else /* !DEBUG */
 
-//#define EXIT(ENUM)		RETURN(ENUM)
 
 #define ASSERT(expr)
 #define ASSERT_ERRNO_AND_EXIT(expr, errnum)
