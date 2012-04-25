@@ -82,6 +82,8 @@ int k_device_init ( kdevice_t *kdev, int flags, void *params, void *callback )
 /*! Remove device from list of devices */
 int k_device_remove ( kdevice_t *kdev )
 {
+	kdevice_t *test;
+
 	ASSERT ( kdev );
 
 	if ( kdev->dev.irq_num != -1 )
@@ -94,8 +96,12 @@ int k_device_remove ( kdevice_t *kdev )
 	if ( kdev->dev.destroy )
 		kdev->dev.destroy ( kdev->dev.flags, kdev->dev.params,
 				    &kdev->dev );
-
-	list_remove ( &devices, FIRST, &kdev->list );
+#ifdef DEBUG
+	test = list_find_and_remove ( &devices, &kdev->list );
+	ASSERT ( test == kdev );
+#else
+	(void) list_remove ( &devices, 0, &kdev->list );
+#endif
 
 	kfree ( kdev );
 

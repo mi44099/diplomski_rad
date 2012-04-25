@@ -236,7 +236,7 @@ int sys__msg_recv ( void *p )
 	kgmsg_q *kgmsgq;
 	kmsg_q *kmsgq;
 	msg_q *msgq;
-	kmsg_t *kmsg;
+	kmsg_t *kmsg, *kmsgx;
 
 	src_type = *( (int *) p );	p += sizeof (int);
 	src = *( (void **) p );		p += sizeof (void *);
@@ -286,8 +286,8 @@ int sys__msg_recv ( void *p )
 		msg->size = kmsg->msg.size;
 		memcpy ( msg->data, kmsg->msg.data, msg->size );
 
-		kmsg = list_remove ( &kmsgq->msgs, FIRST, &kmsg->list );
-		ASSERT ( kmsg );
+		kmsgx = list_remove ( &kmsgq->msgs, FIRST, NULL );
+		ASSERT ( kmsg == kmsgx );
 		kfree ( kmsg );
 
 		EXIT ( SUCCESS );

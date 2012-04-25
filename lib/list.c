@@ -136,6 +136,7 @@ void *list_get_next ( list_h *hdr )
  *		list and return pointer to it
  * \param ref	Reference (pointer) to element to be removed from list
  * \return pointer to removed list element, NULL if list is empty
+ * NOTE function assumes that element is in list - it doesn't check!!!
  */
 void *list_remove ( list_t *list, unsigned int flags, list_h *ref )
 {
@@ -169,4 +170,45 @@ void *list_remove ( list_t *list, unsigned int flags, list_h *ref )
 	else {
 		return NULL;
 	}
+}
+
+/*!
+ * Remove element from list if element is in list
+ * \param list	List identifier (pointer)
+ * \param flags	Constant: FIRST(0) or LAST(1) - which element to remove from
+ *		list and return pointer to it
+ * \param ref	Reference (pointer) to element to be removed from list
+ * \return pointer to removed list element, NULL if list is empty
+ */
+void *list_find_and_remove ( list_t *list, list_h *ref )
+{
+	list_h *iter;
+
+	ASSERT ( list && ref );
+
+	iter = list->first;
+	while ( iter && iter != ref )
+	{
+		if ( iter == ref )
+		{
+			if ( ref->prev )
+				ref->prev->next = ref->next;
+
+			if ( ref->next )
+				ref->next->prev = ref->prev;
+
+			if ( list->first == ref )
+				list->first = ref->next;
+
+			if ( list->last == ref )
+				list->last = ref->prev;
+
+			return ref->object;
+		}
+		else {
+			iter = iter->next;
+		}
+	}
+
+	return NULL;
 }

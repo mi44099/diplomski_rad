@@ -68,4 +68,5 @@ void list_sort_add ( list_t *list, void *object, list_h *hdr,
 				   int (*cmp) ( void *, void * ) );
 void *list_get ( list_t *list, unsigned int flags );
 void *list_remove ( list_t *list, unsigned int flags, list_h *ref );
+void *list_find_and_remove ( list_t *list, list_h *ref );
 void *list_get_next ( list_h *hdr );

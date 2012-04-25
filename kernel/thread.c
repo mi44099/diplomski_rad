@@ -438,10 +438,17 @@ kthread_t *kthread_remove_from_ready ( kthread_t *kthread )
 /*! Internal function for removing (freeing) thread descriptor */
 static void kthread_remove_descriptor ( kthread_t *kthread )
 {
+	kthread_t *test;
+
 	k_free_unique_id ( kthread->id );
 	kthread->id = 0;
 
-	list_remove ( &all_threads, 0, &kthread->all );
+#ifdef DEBUG
+	test = list_find_and_remove ( &all_threads, &kthread->all );
+	ASSERT ( test == kthread );
+#else
+	(void) list_remove ( &all_threads, 0, &kthread->all );
+#endif
 
 	kfree ( kthread );
 }
@@ -452,6 +459,8 @@ static void kthread_remove_descriptor ( kthread_t *kthread )
  */
 int kthread_cancel ( kthread_t *kthread, int exit_status )
 {
+	void *test;
+
 	if ( kthread->state == THR_STATE_PASSIVE )
 		return SUCCESS; /* thread is already finished */
 
@@ -506,7 +515,12 @@ int kthread_cancel ( kthread_t *kthread, int exit_status )
 	{
 		/* last (non-kernel) thread - remove process */
 		kfree ( kthread->proc->pi );
-		ASSERT ( list_remove ( &procs, FIRST, &kthread->proc->all ) );
+#ifdef DEBUG
+		test = list_find_and_remove ( &procs, &kthread->proc->all );
+		ASSERT ( test == kthread->proc );
+#else
+		(void) list_remove ( &procs, 0, &kthread->proc->all );
+#endif
 		kfree ( kthread->proc );
 	}
 
@@ -593,13 +607,12 @@ int sys__thread_exit ( void *p )
 {
 	int status;
 
-	status = *( (int *) p );
-LOG(DEBUG, "EXIT" );
-	kthread_cancel ( active_thread, status );
-LOG(DEBUG, "EXIT" );
+LOG(DEBUG, "%x THREAD_EXIT (EXIT)", active_thread );
 
-	kthreads_schedule ();
-LOG(DEBUG, "EXIT-----------" );
+	status = *( (int *) p );
+	kthread_cancel ( active_thread, status );
+
+LOG(DEBUG, "%x THREAD_EXIT (SELECTED)", active_thread );
 
 	return 0;
 }
@@ -960,7 +973,7 @@ inline void kthreadq_prepend ( kthread_q *q, kthread_t *kthread )
 inline kthread_t *kthreadq_remove ( kthread_q *q, kthread_t *kthread )
 {
 	if ( kthread )
-		return list_remove ( &q->q, FIRST, &kthread->ql );
+		return list_find_and_remove ( &q->q, &kthread->ql );
 	else
 		return list_remove ( &q->q, FIRST, NULL );
 }
