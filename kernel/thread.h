@@ -94,6 +94,7 @@ extern inline void *kthread_get_qdata ( kthread_t *kthr );
 /*! errno */
 extern inline void kthread_set_errno ( kthread_t *kthr, int error_number );
 extern inline int kthread_get_errno ( kthread_t *kthr );
+extern inline void kthread_set_syscall_retval ( kthread_t *kthread, int ret_val );
 
 int kthread_info ();
 

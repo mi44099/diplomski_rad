@@ -144,6 +144,7 @@ int sys__set_thread_sched_params ( void *p )
 	sched_t *params;
 	//other variables
 	kthread_t *kthread;
+	int retval = 0;
 
 	thread = *( (void **) p ); p += sizeof (void *);
 	thread = U2K_GET_ADR ( thread, kthread_get_process (NULL) );
@@ -171,10 +172,10 @@ int sys__set_thread_sched_params ( void *p )
 
 	if ( params && ksched[sched_policy] &&
 	     ksched[sched_policy]->set_thread_sched_parameters )
-		ksched[sched_policy]->set_thread_sched_parameters ( kthread,
+		retval = ksched[sched_policy]->set_thread_sched_parameters ( kthread,
 								    params );
 
-	return 0;
+	return retval;
 }
 
 /*! Get thread scheduling parameters */

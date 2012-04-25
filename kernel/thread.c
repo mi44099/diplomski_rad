@@ -5,6 +5,7 @@
 #include "thread.h"
 
 #include <arch/interrupts.h>
+#include <arch/syscall.h>
 #include <kernel/memory.h>
 #include <kernel/devices.h>
 #include <kernel/kprint.h>
@@ -593,12 +594,14 @@ int sys__thread_exit ( void *p )
 	int status;
 
 	status = *( (int *) p );
-
+LOG(DEBUG, "EXIT" );
 	kthread_cancel ( active_thread, status );
+LOG(DEBUG, "EXIT" );
 
 	kthreads_schedule ();
+LOG(DEBUG, "EXIT-----------" );
 
-	return 0; /* should never reach here - thread is terminated! */
+	return 0;
 }
 
 /*!
@@ -1039,4 +1042,9 @@ inline int kthread_get_errno ( kthread_t *kthread )
 		return kthread->errno;
 	else
 		return active_thread->errno;
+}
+
+inline void kthread_set_syscall_retval ( kthread_t *kthread, int ret_val )
+{
+	arch_syscall_set_retval ( kthread_get_context(kthread), ret_val );
 }

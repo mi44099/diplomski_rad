@@ -27,7 +27,7 @@ static void edf_thread ( void *param )
 	time_t period, deadline;
 
 	i = thr_no;
-	period.sec = thr_no * 2;
+	period.sec = thr_no * 1;
 	period.nsec = 0;
 	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
@@ -38,10 +38,14 @@ static void edf_thread ( void *param )
 	for ( i = 0; ; i++ )
 	{
 		message ( thr_no, "EDF_WAIT" );
-		edf_wait ();
+		if ( edf_wait () )
+		{
+			print ( "Prekoracen trenutak krajnjeg dovrsetka!\n" );
+			break;
+		}
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 45000000; j++ )
+		for ( j = 1; j <= 65000000; j++ )
 			memory_barrier();
 	}
 

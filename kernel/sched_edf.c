@@ -84,10 +84,29 @@ static int edf_get_sched_parameters ( int sched_policy, sched_t *params )
 	return 0;
 }
 
+static int edf_arm_alarm ( kthread_t *kthread )
+{
+	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+	time_t now;
+	alarm_t alarm;
+
+	k_get_time ( &now );
+
+	alarm.action = edf_timer;
+	alarm.param = kthread;
+	alarm.flags = ALARM_PERIODIC;
+	alarm.period = tsched->params.edf.period;
+	alarm.exp_time = tsched->params.edf.next_run;
+
+	return k_alarm_new (	&tsched->params.edf.edf_alarm,
+				&alarm,
+				KERNELCALL );
+}
+
 static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 {
 	time_t now;
-	alarm_t alarm;
+	//alarm_t alarm;
 	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
 	ksched_t *gsched = ksched_get ( tsched->sched_policy );
 
@@ -103,6 +122,11 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 		tsched->params.edf.relative_deadline = params->edf.deadline;
 		tsched->params.edf.flags = params->edf.flags ^ EDF_SET;
 
+		/* set periodic alarm */
+		tsched->params.edf.next_run = now;
+		time_add ( &tsched->params.edf.next_run, &params->edf.period );
+		edf_arm_alarm ( kthread );
+
 		/*
 		 * adjust "next_run" and "deadline" for "0" period
 		 * - first "wait" will set correct values for first period
@@ -113,18 +137,6 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 		tsched->params.edf.active_deadline = now;
 		time_add ( &tsched->params.edf.active_deadline,
 			   &params->edf.deadline );
-
-		/* set periodic alarm, first activation: now+period (2nd p.) */
-		alarm.action = edf_timer;
-		alarm.param = kthread;
-		alarm.flags = ALARM_PERIODIC;
-		alarm.period = tsched->params.edf.period;
-		alarm.exp_time = now;
-		time_add ( &alarm.exp_time, &alarm.period );
-
-		k_alarm_new (	&tsched->params.edf.edf_alarm,
-				&alarm,
-				KERNELCALL );
 	}
 	else if ( params->edf.flags == EDF_WAIT )
 	{
@@ -160,15 +172,28 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 	}
 	else if ( params->edf.flags == EDF_EXIT )
 	{
+		LOG( DEBUG, "%x [EXIT]", kthread );
 		if ( edf_check_deadline ( kthread ) )
+		{
+			LOG( DEBUG, "%x [EXIT]", kthread );
 			return -1;
+		}
 
-		k_alarm_remove ( tsched->params.edf.edf_alarm );
+		LOG( DEBUG, "%x [EXIT]", kthread );
+		if ( tsched->params.edf.edf_alarm )
+			k_alarm_remove ( tsched->params.edf.edf_alarm );
 
+		LOG( DEBUG, "%x [EXIT]", kthread );
 		tsched->sched_policy = SCHED_FIFO;
 
 		if ( k_edf_schedule () )
+		{
+			LOG( DEBUG, "%x [EXIT]", kthread );
+
 			kthreads_schedule (); /* will NOT call edf_schedule() */
+		}
+
+		LOG( DEBUG, "%x [EXIT]", kthread );
 	}
 
 	return 0;
@@ -254,14 +279,30 @@ static void edf_timer ( void *p )
 {
 	kthread_t *kthread = p;
 
-	//LOG( DEBUG, "%x [Alarm]", kthread );
+	LOG( DEBUG, "%x [Alarm]", kthread );
 
 	if( kthread && kthreadq_remove ( &ksched_edf.params.edf.wait, kthread ))
 	{
 		if ( edf_check_deadline ( kthread ) )
-			return;
+		{
+			LOG( DEBUG, "%x [Alarm-xxx]", kthread );
+			kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+			k_alarm_remove ( tsched->params.edf.edf_alarm );
+			tsched->params.edf.edf_alarm = NULL;
+			
+			if ( !kthread_is_ready (kthread) )
+			{
+				LOG( DEBUG, "%x [Alarm-xxx]", kthread );
+				kthread_set_syscall_retval ( kthread, -1 );
+				kthread_move_to_ready ( kthread, LAST );
 
-		LOG( DEBUG, "%x [Alarm]", kthread );
+				kthreads_schedule ();
+			}
+
+			return;
+		}
+
+		//LOG( DEBUG, "%x [Alarm]", kthread );
 		kthread_enqueue ( kthread, &ksched_edf.params.edf.ready );
 
 		k_edf_schedule ();
