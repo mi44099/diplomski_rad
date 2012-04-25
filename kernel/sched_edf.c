@@ -261,7 +261,7 @@ static void edf_timer ( void *p )
 		if ( edf_check_deadline ( kthread ) )
 			return;
 
-		/*LOG( DEBUG, "%x [Alarm]", kthread );*/
+		LOG( DEBUG, "%x [Alarm]", kthread );
 		kthread_enqueue ( kthread, &ksched_edf.params.edf.ready );
 
 		k_edf_schedule ();

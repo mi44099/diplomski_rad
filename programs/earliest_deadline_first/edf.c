@@ -7,8 +7,8 @@
 
 char PROG_HELP[] = "EDF scheduling demonstration example";
 
-#define THR_NUM	3
-#define TEST_DURATION	10 /* seconds */
+#define THR_NUM	4
+#define TEST_DURATION	20 /* seconds */
 
 void message ( int thread, char *action )
 {
@@ -27,7 +27,7 @@ static void edf_thread ( void *param )
 	time_t period, deadline;
 
 	i = thr_no;
-	period.sec = thr_no * 1;
+	period.sec = thr_no * 2;
 	period.nsec = 0;
 	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
