@@ -30,7 +30,11 @@ KERNEL_IMG = $(BUILDDIR)/$(KERNEL_FILE_NAME)
 K_INIT_PROG = edf
 #K_INIT_PROG = shell
 
-CMACROS_K := $(CMACROS) DEBUG ASSERT_H=\<kernel/errno.h\> \
+# if using USE_SSE turn optimization on: flag -On (n>0) i CFLAGS
+# otherwise will not work! (bug somewhere - problems with context save/restore)
+
+#CMACROS_K := $(CMACROS) DEBUG ASSERT_H=\<kernel/errno.h\>
+CMACROS_K := $(CMACROS) USE_SSE DEBUG ASSERT_H=\<kernel/errno.h\> \
 		K_INIT_PROG=\"$(K_INIT_PROG)\"
 
 #------------------------------------------------------------------------------
@@ -56,17 +60,17 @@ $(KDIRS_CREATED):
 	@-$(foreach DIR,$(DIRS_K), if [ ! -e $(BUILD_K)/$(DIR) ]; \
 		then mkdir -p $(BUILD_K)/$(DIR); fi; )
 	@touch $(KDIRS_CREATED)
-	@echo "\nCompiling kernel ..."
+	@echo -e "\nCompiling kernel ..."
 
 # define how to compile .c files
-$(BUILD_K)/%.o: %.c Makefile.kernel
+$(BUILD_K)/%.o: %.c Makefile.kernel Makefile
 	@echo [compiling 'kernel'] $< ...
 	@$(CC_K) -c $< -o $@ -MMD $(CFLAGS_K) \
 		$(foreach INC,$(INCLUDES_K),-I $(INC)) \
 		$(foreach MACRO,$(CMACROS_K),-D $(MACRO))
 
 # define how to compile .S files (assembler)
-$(BUILD_K)/%.asm.o: %.S Makefile.kernel
+$(BUILD_K)/%.asm.o: %.S Makefile.kernel Makefile
 	@echo [compiling 'kernel'] $< ...
 	@$(CC_K) -c $< -o $@ -MMD $(CFLAGS_K) \
 		$(foreach INC,$(INCLUDES_K),-I$(INC)) \

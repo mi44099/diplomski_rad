@@ -13,6 +13,10 @@
 .globl arch_interrupt_handlers
 .globl arch_return_to_thread
 
+#ifdef USE_SSE
+.globl arch_sse_supported
+#endif
+
 /*.section .startup_code*/
 .section .text
 
@@ -32,8 +36,9 @@ interrupt_\int_num:
 .endif
 
 	pushal
+
 	movl	$\int_num, %eax
-	jmp	arch_interrupts_common_routine
+	jmp	.arch_interrupts_common_routine
 .endr
 
 
@@ -42,12 +47,23 @@ interrupt_\int_num:
  * - perform required 'housekeeping' operations and forward processing to
  *   C code function in arch layer (interrupts.c: arch_interrupt_handler)
  */
-arch_interrupts_common_routine:
+.arch_interrupts_common_routine:
 	/* save thread segment registers in thread context */
 	pushw	%ds
 	pushw	%es
 	pushw	%fs
 	pushw	%gs
+
+#ifdef USE_SSE
+	subl	$512, %esp	/* make sure fxsave has enough space */
+
+	cmp	$0, arch_sse_supported	/* check if SSE is supported */
+	je	.noSSE1
+
+	fxsave	(%esp)		/* save sse context */
+
+.noSSE1:
+#endif
 
 	/* activate interrupt (kernel) segments and stack */
         mov     $GDT_DESCRIPTOR ( SEGM_K_DATA, GDT, PRIV_KERNEL ), %bx
@@ -72,13 +88,25 @@ arch_return_to_thread:
 	movw	arch_thr_context_ss, %ss
 	/* restore pointer where thread context is saved */
 	movl	arch_thr_context, %esp
+
+	/* restore 'context' */
+
+#ifdef USE_SSE
+	cmp	$0, arch_sse_supported	/* check if SSE is supported */
+	je	.noSSE2
+
+	fxrstor	(%esp)		/* restore sse context */
+
+.noSSE2:
+	addl	$512, %esp	/* move stack pointer */
+#endif
+
 	/* restore thread segment registers from thread context */
 	popw	%gs
 	popw	%fs
 	popw	%es
 	popw	%ds
 
-	/* restore 'context' */
 	popal
 
 	/* remove error code (either real or dummy) from stack */
@@ -89,6 +117,11 @@ arch_return_to_thread:
 
 .section .data
 .align	4
+
+#ifdef USE_SSE
+arch_sse_supported:
+	.long 0
+#endif
 
 /* Interrupt handlers function addresses, required for filling IDT */
 .type	arch_interrupt_handlers, @object

@@ -4,7 +4,7 @@
 # Common configuration that affects both kernel and user programs
 #------------------------------------------------------------------------------
 
-OS_NAME = "OSEER"
+OS_NAME = "OSIER"
 NAME_MAJOR := $(shell basename "`cd ..; pwd -P`")
 NAME_MINOR := $(shell basename "`pwd -P`")
 PROJECT := $(NAME_MINOR)
@@ -43,7 +43,7 @@ DEV_PTRS := $(subst $(space),$(comma),$(DEV_PTRS))
 
 CMACROS += $(DEVICES) DEVICES_DEV=$(DEV_VARS) DEVICES_DEV_PTRS=$(DEV_PTRS) \
 	IC_DEV=i8259 TIMER=i8253 K_INITIAL_STDOUT=vga_text_dev		   \
-	K_STDOUT="\"COM1\"" U_STDOUT="\"COM1\"" U_STDIN="\"i8042\""
+	K_STDOUT="\"COM1\"" U_STDOUT="\"COM1\"" U_STDIN="\"COM1\""
 #	K_STDOUT="\"COM1\"" U_STDOUT="\"VGA_TXT\"" U_STDIN="\"i8042\""
 
 #------------------------------------------------------------------------------

@@ -8,8 +8,16 @@
 
 #define	INIT_EFLAGS	0x3202 /* ring 3 ! */
 
+#ifdef USE_SSE
+/* for storing extended context: FPU, MMX, SSE context must be aligned */
+#define CONTEXT_ALIGNMENT	16
+#endif
+
 typedef struct _arch_context_t_
 {
+#ifdef USE_SSE
+	uint8 sse_mmx_fpu[512];
+#endif
 	uint16 gs, fs, es, ds;
 	int32 edi, esi, ebp, _esp, ebx, edx, ecx, eax;
 	int32 err;

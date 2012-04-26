@@ -307,53 +307,49 @@ static int k_edf_schedule ()
 static void edf_timer ( void *p )
 {
 	kthread_t *kthread = p, *test;
+	kthread_sched_data_t *tsched;
 
-//	LOG( DEBUG, "%x [Alarm]", kthread );
+	ASSERT ( kthread );
 
-	if ( kthread )
-		test = kthreadq_remove ( &ksched_edf.params.edf.wait, kthread );
+	test = kthreadq_remove ( &ksched_edf.params.edf.wait, kthread );
 
 	LOG( DEBUG, "%x %x [Alarm]", kthread, test );
 
-	if( kthread && test == kthread )
+	if( test == kthread )
 	{
 		if ( edf_check_deadline ( kthread ) )
 		{
-			LOG( DEBUG, "%x [Alarm-xxx]", kthread );
-			kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
+			ASSERT ( !kthread_is_ready (kthread) );
+			
+			LOG( DEBUG, "%x [Waked, but too late]", kthread );
+			
+			tsched = kthread_get_sched_param ( kthread );
 			k_alarm_remove ( tsched->params.edf.edf_alarm );
 			tsched->params.edf.edf_alarm = NULL;
 
-			if ( !kthread_is_ready (kthread) )
-			{
-				LOG( DEBUG, "%x [Alarm-xxx]", kthread );
-				kthread_set_syscall_retval ( kthread, -1 );
-				kthread_move_to_ready ( kthread, LAST );
+			kthread_set_syscall_retval ( kthread, -1 );
+			kthread_move_to_ready ( kthread, LAST );
 
-				kthreads_schedule ();
-			}
+			kthreads_schedule ();
 		}
 		else {
-			//LOG( DEBUG, "%x [Alarm]", kthread );
+			LOG( DEBUG, "%x [Waked, moved to edf.ready]", kthread );
 			kthread_enqueue ( kthread, &ksched_edf.params.edf.ready );
 
 			if ( k_edf_schedule () )
 				kthreads_schedule ();
 		}
 	}
-	else if ( kthread )
-	{
+	else {
 		/*
 		 * thread is not in edf.wait queue, but might be running or its
-		 * blocked - its possible it missed deadline: check it
+		 * blocked - it is probable (sure?) it missed deadline
 		 */
+		LOG( DEBUG, "%x [Not in edf.wait. Missed deadline?]", kthread );
 		if ( edf_check_deadline ( kthread ) )
 		{
 			/* what to do if its missed? kill thread? */
 		}
-	}
-	else {
-		/* TODO error? */
 	}
 }
 

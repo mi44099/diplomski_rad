@@ -72,7 +72,7 @@
 
 typedef struct _arch_uart_t_
 {
-	int initialized;
+	int uart_type;
 
 	uart_t params;
 
@@ -92,7 +92,8 @@ arch_uart_t;
 
 /* UART chip type */
 enum {
-	UT8250 = 1,
+	UNDEFINED = 0,
+	UT8250,
 	UT16450,
 	UT16550,
 	UT16550A,

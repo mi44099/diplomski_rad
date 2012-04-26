@@ -359,7 +359,6 @@ void k_memory_fault ()
 	else {
 		/* terminate active thread */
 		LOG ( ERROR, "Thread caused GPF, terminating!\n");
-halt ();
 		sys__thread_exit ( NULL );
 	}
 }

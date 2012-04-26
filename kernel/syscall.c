@@ -62,8 +62,12 @@ static int (*k_sysfunc[SYSFUNCS]) ( void *params ) =
 
 	sys__device_send,
 	sys__device_recv,
+	sys__device_open,
+	sys__device_close,
 	sys__device_lock,
 	sys__device_unlock,
+	sys__set_default_stdin,
+	sys__set_default_stdout,
 
 	sys__thread_msg_set,
 	sys__create_msg_queue,

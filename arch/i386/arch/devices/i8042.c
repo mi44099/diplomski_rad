@@ -92,10 +92,10 @@ static int i8042_get ( void *data, size_t size, uint flags, device_t *d )
 
 	if ( buf_size > 0 )
 	{
-		if ( ( flags & ONLY_LAST )  && buf_last != buf_first )
+		if ( ( flags & ONLY_LAST ) )
 		{
 			/* return last keystroke, drop all before */
-			buf_last = buf_first;
+			buf_first = (buf_last>0 ? buf_last-1 : KEYB_BUFF_SIZE);
 			buf_size = 1;
 		}
 

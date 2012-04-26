@@ -141,6 +141,12 @@ struct _kthread_t_
 	int errno;		/* exit status of last function call */
 
 	int ref_cnt;		/* can we free this descriptor? */
+
+#ifdef USE_SSE
+	void *orig_addr;	/* start of memory chunk for this descriptor
+				   might be different than "kthread" because of
+				   alignment (if used) */
+#endif
 };
 
 /*! Thread states */

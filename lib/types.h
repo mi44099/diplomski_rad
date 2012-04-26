@@ -27,7 +27,7 @@ typedef uint32 ssize_t;
 #define KERNEL_FONT	( 1 << 0 )
 #define USER_FONT	( 1 << 1 )
 
-#define PRINTCHAR	( 1 << 2 )
+#define PRINTSTRING	( 1 << 2 )
 #define CLEAR		( 1 << 3 )
 #define GOTOXY		( 1 << 4 )
 

@@ -46,5 +46,8 @@ int sys__device_close ( void *p );
 int sys__device_lock ( void *p );
 int sys__device_unlock ( void *p );
 
+int sys__set_default_stdin ( void *p );
+int sys__set_default_stdout ( void *p );
+
 /* include device headers */
 #include <arch/devices.h>

@@ -22,15 +22,21 @@ cmd_t;
 #define PROG_LIST_SIZE	1000
 #define INFO_SIZE	1000
 
+static char s_stdout[MAXCMDLEN];
+static char s_stdin[MAXCMDLEN];
+
 static int help ();
 static int clear ();
 static int sysinfo ( char *args[] );
+static int set ( char *args[] );
 
 static cmd_t sh_cmd[] =
 {
 	{ help, "help", "help - list available commands" },
 	{ clear, "clear", "clear - clear screen" },
 	{ sysinfo, "sysinfo", "system information; usage: sysinfo [options]" },
+	{ set, "set", "change shell settings; "
+		"usage: set stdin|stdout [device]" },
 	{ NULL, "" }
 };
 
@@ -48,6 +54,9 @@ int shell ( char *args[] )
 
 	t.sec = 0;
 	t.nsec = 100000000; /* 100 ms */
+
+	strcpy ( s_stdout, U_STDOUT );
+	strcpy ( s_stdin, U_STDIN );
 
 	while (1)
 	{
@@ -68,7 +77,7 @@ int shell ( char *args[] )
 				continue;
 			}
 
-			if ( key == '\n' )
+			if ( key == '\n' || key == '\r')
 			{
 				if ( i > 0 )
 					break;
@@ -169,6 +178,58 @@ static int sysinfo ( char *args[] )
 	syscall ( SYSINFO, &info, INFO_SIZE, args );
 
 	print ( "%s\n", info );
+
+	return 0;
+}
+
+static int set ( char *args[] )
+{
+	if ( args[1] == NULL ||
+		( strcmp ( args[1], "stdin"  ) &&
+		  strcmp ( args[1], "stdout" )		)	)
+	{
+		print ( "'set' usage: set stdin|stdout [device]\n" );
+	}
+	else if ( args[2] == NULL )
+	{
+		/* print current cofiguration */
+		print ( "console: stdout = %s, stdin = %s\n",
+			s_stdout, s_stdin );
+	}
+	else if ( strcmp ( args[1], "stdin" ) == 0 )
+	{
+		if ( strcmp ( args[2], s_stdin ) == 0 )
+		{
+			print ( "Given stdin (%s) is already in use!\n",
+				args[2] );
+		}
+		else if ( change_default_stdin ( args[2] ) )
+		{
+			print ( "Error in changing stdin to %s\n", args[2] );
+		}
+		else {
+			strcpy ( s_stdin, args[2] );
+		}
+	}
+	else if ( strcmp ( args[1], "stdout" ) == 0 )
+	{
+		if ( strcmp ( args[2], s_stdout ) == 0 )
+		{
+			print ( "Given stdout (%s) is already in use!\n",
+				args[2] );
+		}
+		else if ( change_default_stdout ( args[2] ) )
+		{
+			print ( "Error in changing stdout to %s\n", args[2] );
+		}
+		else {
+			strcpy ( s_stdout, args[2] );
+		}
+	}
+	else {
+		/* must not get here */
+		print ( "Internal shell error!\n" );
+	}
 
 	return 0;
 }

@@ -194,8 +194,18 @@ kthread_t *kthread_create ( void *start_func, void *param, void *exit_func,
 	}
 	ASSERT ( stack && stack_size );
 
-	kthread = kmalloc ( sizeof (kthread_t) ); /* thread descriptor */
+	/* thread descriptor */
+#ifdef USE_SSE
+	kthread = kmalloc ( sizeof (kthread_t) + CONTEXT_ALIGNMENT - 1 );
 	ASSERT ( kthread );
+	void *orig_addr = kthread;
+
+	kthread = (void *) (((uint32) kthread) & 0xfffffff0 );
+	kthread->orig_addr = orig_addr;
+#else
+	kthread = kmalloc ( sizeof (kthread_t) );
+	ASSERT ( kthread );
+#endif
 
 	/* initialize thread descriptor */
 	kthread->id = k_new_unique_id ();
@@ -245,8 +255,6 @@ void kthreads_schedule ()
 	int highest_prio;
 	kthread_t *curr, *next;
 
-//LOG ( DEBUG, "%x [active 1 THR_SCHEDULE]", active_thread );
-
 	curr = active_thread;
 
 	highest_prio = kthread_ready_list_highest ();
@@ -283,7 +291,6 @@ void kthreads_schedule ()
 		ksched_activate_thread ( active_thread );
 	}
 
-//LOG ( DEBUG, "%x [active 2 THR_SCHEDULE]", active_thread );
 	/* select 'active_thread' context */
 	arch_select_thread ( &active_thread->context );
 }
@@ -453,7 +460,11 @@ static void kthread_remove_descriptor ( kthread_t *kthread )
 	(void) list_remove ( &all_threads, 0, &kthread->all );
 #endif
 
+#ifdef USE_SSE
+	kfree ( kthread->orig_addr );
+#else
 	kfree ( kthread );
+#endif
 }
 
 /*!
@@ -610,12 +621,8 @@ int sys__thread_exit ( void *p )
 {
 	int status;
 
-//LOG(DEBUG, "%x THREAD_EXIT (EXIT)", active_thread );
-
 	status = *( (int *) p );
 	kthread_cancel ( active_thread, status );
-
-//LOG(DEBUG, "%x THREAD_EXIT (SELECTED)", active_thread );
 
 	return 0;
 }

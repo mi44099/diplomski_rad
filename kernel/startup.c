@@ -11,13 +11,11 @@
 #include <kernel/errno.h>
 #include <arch/processor.h>
 #include <lib/types.h>
+#include <lib/string.h>
 
 char system_info[] = 	OS_NAME ": " NAME_MAJOR ":" NAME_MINOR ", "
 			"Version: " VERSION " (" PLATFORM ")";
 //			"More info: " AUTHOR;
-
-/* default standard input and output devices for user programs (threads) */
-void *u_stdin, *u_stdout;
 
 /*!
  * First kernel function (after grub loads it to memory)
@@ -30,6 +28,7 @@ void k_startup ( unsigned long magic, unsigned long addr )
 	extern kdevice_t *k_stdout; /* console for kernel messages */
 	kdevice_t k_initial_stdout;
 	/* default standard input and output devices for user programs */
+	extern void *u_stdin, *u_stdout;
 
 	/* set initial stdout */
 	k_initial_stdout.dev = K_INITIAL_STDOUT;
@@ -72,6 +71,11 @@ void k_startup ( unsigned long magic, unsigned long addr )
 		halt();
 	}
 
-	/* complete initialization by starting first thread */
+	if ( strcmp ( U_STDIN, "i8042" ) == 0 )
+		kprint ("For input (keyboard) focus QEMU simulator window!\n");
+	else if ( strcmp ( U_STDIN, "COM1" ) == 0 )
+		kprint ("For input (keyboard) focus shell\n");
+
+/* complete initialization by starting first thread */
 	arch_return_to_thread ();
 }

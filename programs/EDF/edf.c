@@ -19,7 +19,7 @@ void message ( int thread, char *action )
 		t.sec, t.nsec/100000000, thread, action );
 }
 
-/* example threads */
+/* EDF thread */
 static void edf_thread ( void *param )
 {
 	int thr_no, i, j;
@@ -40,7 +40,7 @@ static void edf_thread ( void *param )
 		message ( thr_no, "EDF_WAIT" );
 		if ( edf_wait () )
 		{
-			print ( "Deadline missed, exiting!\n" );
+			message ( thr_no, "Deadline missed, exiting!" );
 			break;
 		}
 
@@ -53,6 +53,20 @@ static void edf_thread ( void *param )
 	edf_exit ();
 }
 
+/* unimportant thread */
+static void unimportant_thread ( void *param )
+{
+	time_t sleep;
+
+	sleep.sec = 0;
+	sleep.nsec = 100000000;
+	while (1)
+	{
+		message ( 0, "unimportant thread" );
+		delay ( &sleep );
+	}
+}
+
 int edf ( char *args[] )
 {
 	thread_t thread[THR_NUM + 1];
@@ -61,9 +75,12 @@ int edf ( char *args[] )
 
 	for ( i = 0; i < THR_NUM; i++ )
 	{
-		create_thread ( edf_thread, (void *) (i+1), SCHED_EDF,
-				THR_DEFAULT_PRIO - 1, &thread[i] );
+		//create_thread ( edf_thread, (void *) (i+1), SCHED_EDF,
+		//		THR_DEFAULT_PRIO - 1, &thread[i] );
 	}
+
+	create_thread ( unimportant_thread, (void *) (i+1), SCHED_FIFO,
+			THR_DEFAULT_PRIO - 2, &thread[i] );
 
 	print ( "Threads created, giving them %d seconds\n", TEST_DURATION );
 	sleep.sec = TEST_DURATION;
@@ -71,9 +88,9 @@ int edf ( char *args[] )
 	delay ( &sleep );
 	print ( "Test over - threads are to be canceled\n");
 
-	for ( i = 0; i < THR_NUM; i++ )
+	for ( i = 0; i < THR_NUM + 1; i++ )
 		cancel_thread ( &thread[i] );
-	for ( i = 0; i < THR_NUM; i++ )
+	for ( i = 0; i < THR_NUM + 1; i++ )
 		wait_for_thread ( &thread[i], IPC_WAIT );
 
 	return 0;

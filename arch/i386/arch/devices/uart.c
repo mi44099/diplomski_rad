@@ -11,19 +11,17 @@
 #define _KERNEL_
 #include <kernel/errno.h>
 
-static int uart_type = 0;
-
 /*!
  * Identify UART chip
  * - algorithm taken from:
  *   http://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming
  */
-static int identify_UART ()
+static int identify_UART ( arch_uart_t *up )
 {
 	int test;
 
-	if ( uart_type )
-		return uart_type;
+	if ( up->uart_type )
+		return up->uart_type;
 
 	outb ( COM1_BASE + FCR, 0xE7 );
 	test = inb ( COM1_BASE + IIR );
@@ -32,24 +30,24 @@ static int identify_UART ()
 		if ( test & 0x80 )
 		{
 			if ( test & 0x20 )
-				uart_type = UT16750;
+				up->uart_type = UT16750;
 			else
-				uart_type = UT16550A;
+				up->uart_type = UT16550A;
 		}
 		else {
-			uart_type = UT16550;
+			up->uart_type = UT16550;
 		}
 	}
 	else {
 		outb ( COM1_BASE + SR, 0x2A );
 		test = inb ( COM1_BASE + SR );
 		if ( test == 0x2A )
-			uart_type = UT16450;
+			up->uart_type = UT16450;
 		else
-			uart_type = UT8250;
+			up->uart_type = UT8250;
 	}
 
-	return uart_type;
+	return up->uart_type;
 }
 
 /*! Initialize UART device */
@@ -57,13 +55,13 @@ int uart_init ( uint flags, void *params, device_t *dev )
 {
 	arch_uart_t *up;
 
-	/* check chip */
-	identify_UART ();
-
 	/* set default parameters */
 	up = dev->params;
 
-	if ( up->initialized )
+	/* check chip */
+	identify_UART ( up );
+
+	if ( up->uart_type )
 		return 0; /* already initialized */
 
 	return uart_config ( dev, &up->params );
@@ -95,7 +93,7 @@ static int uart_config ( device_t *dev, uart_t *params )
 	outb ( up->port + IER, 0 );
 
 	/* clear FIFO (set FCR) */
-	if ( uart_type > UT8250 )
+	if ( up->uart_type > UT8250 )
 	{
 		setting = FCR_ENABLE | FCR_CLEAR;
 
@@ -104,7 +102,7 @@ static int uart_config ( device_t *dev, uart_t *params )
 		else
 			setting |= FCR_STREAM_MODE;
 
-		if ( uart_type == UT16750 )
+		if ( up->uart_type == UT16750 )
 			setting |= FCR_64BYTES;
 
 		outb ( up->port + FCR, setting );
@@ -119,7 +117,7 @@ static int uart_config ( device_t *dev, uart_t *params )
 	/* set LCR */
 	setting = up->params.data_bits - 5;
 	setting |= up->params.parity | up->params.stop_bit | LCR_DLAB_OFF;
-	if ( uart_type >= UT16550 )
+	if ( up->uart_type >= UT16550 )
 		setting |= LCR_BREAK;
 
 	/* set MCR */
@@ -132,7 +130,7 @@ static int uart_config ( device_t *dev, uart_t *params )
 	up->inf = up->inl = up->insz = 0;
 	up->outf = up->outl = up->outsz = 0;
 
-	up->initialized = TRUE;
+	//up->initialized = TRUE;
 
 	return 0;
 }
@@ -244,6 +242,11 @@ static int uart_send ( void *data, size_t size, uint flags, device_t *dev )
 {
 	arch_uart_t *up;
 	uint8 *d, pchar;
+	struct _param_ {
+		int attr;
+		char text[1];
+	}
+	*param;
 
 	ASSERT ( dev );
 
@@ -256,14 +259,12 @@ static int uart_send ( void *data, size_t size, uint flags, device_t *dev )
 	up = dev->params;
 	d = data;
 
-	/* console switch? emulate stdout: CLEAR and GOTOXY both send '\n' */
+	/* console switch? emulate stdout: CLEAR and GOTOXY: both send '\n' */
 	switch ( flags )
 	{
-		case PRINTCHAR:
-			size = 1; /* ignore attr field, send only ASCII */
-			pchar = (uint8) *( (int *) data );
-			d = &pchar;
-
+		case PRINTSTRING:
+			param = data;
+			d = (uint8 *) &param->text[0];
 			break;
 
 		case CLEAR:
@@ -282,6 +283,9 @@ static int uart_send ( void *data, size_t size, uint flags, device_t *dev )
 	/* first, copy to software buffer */
 	while ( size > 0 && up->outsz < BUFFER_SIZE )
 	{
+		if ( *d == 0 && flags == PRINTSTRING )
+			break;
+
 		up->outbuff[up->outl] = *d++;
 
 		INC_MOD ( up->outl, BUFFER_SIZE );
@@ -342,7 +346,7 @@ static int uart_recv ( void *data, size_t size, uint flags, device_t *dev )
 /*! COM1 device & parameters */
 static arch_uart_t com1_params = (arch_uart_t)
 {
-	.initialized = FALSE,
+	.uart_type = UNDEFINED,
 	.params = UART_DEFAULT_SETTING,
 	.port = COM1_BASE,
 	.inf = 0, .inl = 0, .insz = 0,

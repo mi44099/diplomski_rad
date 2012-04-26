@@ -9,6 +9,9 @@
 
 static list_t devices;
 
+/* default standard input and output devices for user programs */
+void *u_stdin, *u_stdout;
+
 /*! Init 'device' subsystem */
 int k_devices_init ()
 {
@@ -289,4 +292,40 @@ int sys__device_unlock ( void *p )
 	dev = *( (void **) p );
 
 	return k_device_unlock ( dev );
+}
+
+int sys__set_default_stdin ( void *p )
+{
+	char *dev_name;
+	void **dev;
+
+	dev_name = U2K_GET_ADR ( *( (char **) p ), kthread_get_process (NULL) );
+	p += sizeof (char *);
+
+	dev = U2K_GET_ADR ( *( (void **) p ), kthread_get_process (NULL) );
+
+	*dev = k_device_open ( dev_name );
+
+	if ( *dev )
+		u_stdin = *dev;
+
+	return *dev == NULL;
+}
+
+int sys__set_default_stdout ( void *p )
+{
+	char *dev_name;
+	void **dev;
+
+	dev_name = U2K_GET_ADR ( *( (char **) p ), kthread_get_process (NULL) );
+	p += sizeof (char *);
+
+	dev = U2K_GET_ADR ( *( (void **) p ), kthread_get_process (NULL) );
+
+	*dev = k_device_open ( dev_name );
+
+	if ( *dev )
+		u_stdout = *dev;
+
+	return *dev == NULL;
 }
