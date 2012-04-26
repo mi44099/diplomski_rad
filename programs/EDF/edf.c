@@ -75,8 +75,8 @@ int edf ( char *args[] )
 
 	for ( i = 0; i < THR_NUM; i++ )
 	{
-		//create_thread ( edf_thread, (void *) (i+1), SCHED_EDF,
-		//		THR_DEFAULT_PRIO - 1, &thread[i] );
+		create_thread ( edf_thread, (void *) (i+1), SCHED_EDF,
+				THR_DEFAULT_PRIO - 1, &thread[i] );
 	}
 
 	create_thread ( unimportant_thread, (void *) (i+1), SCHED_FIFO,

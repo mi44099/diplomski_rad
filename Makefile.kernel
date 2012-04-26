@@ -33,8 +33,8 @@ K_INIT_PROG = edf
 # if using USE_SSE turn optimization on: flag -On (n>0) i CFLAGS
 # otherwise will not work! (bug somewhere - problems with context save/restore)
 
-#CMACROS_K := $(CMACROS) DEBUG ASSERT_H=\<kernel/errno.h\>
-CMACROS_K := $(CMACROS) USE_SSE DEBUG ASSERT_H=\<kernel/errno.h\> \
+#CMACROS_K := $(CMACROS) USE_SSE DEBUG ASSERT_H=\<kernel/errno.h\>
+CMACROS_K := $(CMACROS) DEBUG ASSERT_H=\<kernel/errno.h\> \
 		K_INIT_PROG=\"$(K_INIT_PROG)\"
 
 #------------------------------------------------------------------------------
