@@ -187,7 +187,7 @@ void *list_find_and_remove ( list_t *list, list_h *ref )
 	ASSERT ( list && ref );
 
 	iter = list->first;
-	while ( iter && iter != ref )
+	while ( iter )
 	{
 		if ( iter == ref )
 		{

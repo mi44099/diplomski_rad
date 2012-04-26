@@ -171,6 +171,7 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 			 * activate task => move it to "EDF ready tasks"
 			 */
 			LOG( DEBUG, "%x [EDF READY]", kthread );
+			LOG( DEBUG, "%x [1st READY]", kthreadq_get ( &gsched->params.edf.ready ) );
 			kthread_enqueue ( kthread, &gsched->params.edf.ready );
 			kthreads_schedule (); /* will call edf_schedule() */
 		}
@@ -221,16 +222,28 @@ static int k_edf_schedule ()
 
 	edf_active = gsched->params.edf.active;
 	first = kthreadq_get ( &gsched->params.edf.ready );
+
 	LOG( DEBUG, "%x [active]", edf_active );
 	LOG( DEBUG, "%x [first]", first );
+	//LOG( DEBUG, "%x [next]", next );
 
-	if ( first == NULL )
-		return 0;
+	if ( !first )
+		return 0; /* no threads in edf.ready queue, edf.active unch. */
 
-	/* find first deadline from edf.ready */
-	next = kthreadq_get_next ( next );
-	while ( next != NULL )
+	if ( edf_active )
 	{
+		next = first;
+		first = edf_active;
+		LOG( DEBUG, "%x [next]", kthreadq_get_next ( next ) );
+	}
+	else {
+		next = kthreadq_get_next ( first );
+		LOG( DEBUG, "%x [next]", next );
+	}
+
+	while ( first && next )
+	{
+
 		sch_first = kthread_get_sched_param ( first );
 		sch_next = kthread_get_sched_param ( next );
 
@@ -243,45 +256,49 @@ static int k_edf_schedule ()
 		next = kthreadq_get_next ( next );
 	}
 
-	if ( edf_active )
+	if ( first && first != edf_active )
 	{
-		/* is first in edf.ready before edf_active? */
-		sch_first = kthread_get_sched_param ( edf_active );
-		sch_next = kthread_get_sched_param ( first );
+		next = kthreadq_remove ( &gsched->params.edf.ready, first );
+		LOG ( DEBUG, "%x removed, %x is now first", next, kthreadq_get ( &gsched->params.edf.ready ) );
 
-		if ( time_cmp ( &sch_first->params.edf.active_deadline,
-			&sch_next->params.edf.active_deadline ) > 0 )
+		if ( edf_active )
 		{
-			(void) kthreadq_remove ( &gsched->params.edf.ready, first );
-
-			LOG( DEBUG, "%x [EDF_SCHED_PREEMPT]", first );
+			LOG( DEBUG, "%x=>%x [EDF_SCHED_PREEMPT]",
+			     edf_active, first );
 
 			/*
-			* change active EDF thread:
-			* -remove it from active/ready list
-			* -put it into edf.ready list
-			*/
+			 * change active EDF thread:
+			 * -remove it from active/ready list
+			 * -put it into edf.ready list
+			 */
 			if ( kthread_is_ready (edf_active) )
 			{
 				if ( !kthread_is_active (edf_active) )
+				{
 					kthread_remove_from_ready (edf_active);
+					
+					/*
+					 * set "deactivated" flag, don't need
+					 * another call to "edf_schedule"
+					 */
+				}
+				else {
+					kthread_get_sched_param (edf_active)
+						->activated = 0;
+				}
 
 				kthread_enqueue ( edf_active,
-						&gsched->params.edf.ready );
+						  &gsched->params.edf.ready );
 			}
-			else
-			{
-				/* thread is blocked - leave it there */
-			}
-
-			LOG( DEBUG, "%x [EDF_MOVE_TO_READY]", first );
-			kthread_move_to_ready ( first, LAST );
-			retval = 1;
+			/* else = thread is blocked - leave it there */
 		}
-	}
 
-	gsched->params.edf.active = first;
-	/*LOG( DEBUG, "%x [first]", first );*/
+		gsched->params.edf.active = first;
+		LOG( DEBUG, "%x [new active]", first );
+
+		kthread_move_to_ready ( first, LAST );
+		retval = 1;
+	}
 
 	return retval;
 }
@@ -320,8 +337,19 @@ static void edf_timer ( void *p )
 			//LOG( DEBUG, "%x [Alarm]", kthread );
 			kthread_enqueue ( kthread, &ksched_edf.params.edf.ready );
 
-			k_edf_schedule ();
-			kthreads_schedule ();
+			if ( k_edf_schedule () )
+				kthreads_schedule ();
+		}
+	}
+	else if ( kthread )
+	{
+		/*
+		 * thread is not in edf.wait queue, but might be running or its
+		 * blocked - its possible it missed deadline: check it
+		 */
+		if ( edf_check_deadline ( kthread ) )
+		{
+			/* what to do if its missed? kill thread? */
 		}
 	}
 	else {

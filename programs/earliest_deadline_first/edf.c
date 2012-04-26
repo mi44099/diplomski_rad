@@ -40,12 +40,12 @@ static void edf_thread ( void *param )
 		message ( thr_no, "EDF_WAIT" );
 		if ( edf_wait () )
 		{
-			print ( "Prekoracen trenutak krajnjeg dovrsetka!\n" );
+			print ( "Deadline missed, exiting!\n" );
 			break;
 		}
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 95000000; j++ )
+		for ( j = 1; j <= 45000000; j++ )
 			memory_barrier();
 	}
 

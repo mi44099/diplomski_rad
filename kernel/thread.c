@@ -245,6 +245,8 @@ void kthreads_schedule ()
 	int highest_prio;
 	kthread_t *curr, *next;
 
+//LOG ( DEBUG, "%x [active 1 THR_SCHEDULE]", active_thread );
+
 	curr = active_thread;
 
 	highest_prio = kthread_ready_list_highest ();
@@ -281,6 +283,7 @@ void kthreads_schedule ()
 		ksched_activate_thread ( active_thread );
 	}
 
+//LOG ( DEBUG, "%x [active 2 THR_SCHEDULE]", active_thread );
 	/* select 'active_thread' context */
 	arch_select_thread ( &active_thread->context );
 }
@@ -607,12 +610,12 @@ int sys__thread_exit ( void *p )
 {
 	int status;
 
-LOG(DEBUG, "%x THREAD_EXIT (EXIT)", active_thread );
+//LOG(DEBUG, "%x THREAD_EXIT (EXIT)", active_thread );
 
 	status = *( (int *) p );
 	kthread_cancel ( active_thread, status );
 
-LOG(DEBUG, "%x THREAD_EXIT (SELECTED)", active_thread );
+//LOG(DEBUG, "%x THREAD_EXIT (SELECTED)", active_thread );
 
 	return 0;
 }
