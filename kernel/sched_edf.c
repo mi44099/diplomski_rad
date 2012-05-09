@@ -89,10 +89,8 @@ static int edf_get_sched_parameters ( int sched_policy, sched_t *params )
 static int edf_arm_alarm ( kthread_t *kthread )
 {
 	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
-	time_t now;
 	alarm_t alarm;
 
-	k_get_time ( &now );
 
 	alarm.action = edf_timer;
 	alarm.param = kthread;

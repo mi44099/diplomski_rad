@@ -8,7 +8,7 @@
 char PROG_HELP[] = "EDF scheduling demonstration example";
 
 #define THR_NUM	4
-#define TEST_DURATION	20 /* seconds */
+#define TEST_DURATION	10 /* seconds */
 
 void message ( int thread, char *action )
 {
@@ -32,6 +32,10 @@ static void edf_thread ( void *param )
 	deadline.sec = thr_no * 1;
 	deadline.nsec = 0;
 
+	/*   DEADLINE = PERIOD / 2  */
+//	deadline.sec = ( thr_no / 2 ) * 1;
+//	deadline.nsec = 500000000 * ( thr_no % 2 );
+
 	message ( thr_no, "EDF_SET" );
 	edf_set ( deadline, period, EDF_SET );
 
@@ -45,7 +49,7 @@ static void edf_thread ( void *param )
 		}
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 45000000; j++ )
+		for ( j = 1; j <= 40000000; j++ )
 			memory_barrier();
 	}
 

@@ -1,0 +1,7 @@
+default 0
+timeout=0
+title diplomski_rad
+root (cd)
+kernel /boot/kernel.elf
+module /boot/edf.bin.gz prog_name=edf
+boot
