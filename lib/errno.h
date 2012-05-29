@@ -22,5 +22,6 @@ enum {
 	E_NO_MEMORY,
 	E_RETRY,
 	E_EMPTY,
-	E_TOO_BIG
+	E_TOO_BIG,
+	E_DEADLINE
 };

@@ -15,8 +15,10 @@ typedef struct _ksched_edf_thread_params_t
 	time_t next_run;
 	time_t active_deadline;
 	int flags;
+	int control_flags;
 
-	void *edf_alarm;		/* kernel alarm reference used in EDF */
+	void *edf_period_alarm;		/* kernel alarm reference used in EDF */
+	void *edf_deadline_alarm;
 }
 ksched_edf_thread_params_t;
 

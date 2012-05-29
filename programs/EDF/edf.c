@@ -4,6 +4,7 @@
 #include <api/thread.h>
 #include <api/time.h>
 #include <arch/processor.h>
+#include <lib/types.h>
 
 char PROG_HELP[] = "EDF scheduling demonstration example";
 
@@ -37,7 +38,7 @@ static void edf_thread ( void *param )
 //	deadline.nsec = 500000000 * ( thr_no % 2 );
 
 	message ( thr_no, "EDF_SET" );
-	edf_set ( deadline, period, EDF_SET );
+	edf_set ( deadline, period, EDF_SET, EDF_TERMINATE );
 
 	for ( i = 0; ; i++ )
 	{
@@ -49,7 +50,7 @@ static void edf_thread ( void *param )
 		}
 
 		message ( thr_no, "run" );
-		for ( j = 1; j <= 40000000; j++ )
+		for ( j = 1; j <= 45000000; j++ )
 			memory_barrier();
 	}
 
@@ -86,6 +87,7 @@ int edf ( char *args[] )
 	create_thread ( unimportant_thread, (void *) (i+1), SCHED_FIFO,
 			THR_DEFAULT_PRIO - 2, &thread[i] );
 
+//print( "ctrl_flags = %d\n", EDF_CONTINUE);
 	print ( "Threads created, giving them %d seconds\n", TEST_DURATION );
 	sleep.sec = TEST_DURATION;
 	sleep.nsec = 0;

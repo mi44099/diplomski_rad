@@ -82,14 +82,15 @@ int get_thread_sched_params ( thread_t *thread, int *sched_policy, int *prio,
 }
 
 
-int edf_set ( time_t deadline, time_t period, int flags )
+int edf_set ( time_t deadline, time_t period, int flags, int ctrl_flags )
 {
 	sched_t param;
 	thread_t thread;
 
 	param.edf.deadline = deadline;
 	param.edf.period = period;
-	param.edf.flags = flags | EDF_SET ;
+	param.edf.flags = EDF_SET ;
+	param.edf.control_flags = ctrl_flags ;
 	thread_self ( &thread );
 
 	return set_thread_sched_params ( &thread, SCHED_EDF, 0, &param );

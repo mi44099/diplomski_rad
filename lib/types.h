@@ -243,12 +243,16 @@ sched_rr_t;
 #define EDF_SET		(1<<0)
 #define EDF_WAIT	(1<<1)
 #define EDF_EXIT	(1<<2)
+#define EDF_TERMINATE	(1<<0)
+#define EDF_CONTINUE	(1<<1)
+#define EDF_SKIP	(1<<2)
 
 typedef struct _sched_edf_t_
 {
 	time_t deadline;
 	time_t period;
 	int flags;
+	int control_flags;
 
 }
 sched_edf_t;
