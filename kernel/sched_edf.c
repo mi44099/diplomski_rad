@@ -108,16 +108,11 @@ static int edf_arm_deadline ( kthread_t *kthread )
 {
 	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
 	alarm_t alarm;
-	time_t tmp;
-
-	tmp.sec = 0;
-	tmp.nsec = 0;
-
-
+	
 	alarm.action = edf_deadline_timer;
 	alarm.param = kthread;
 	alarm.flags = 0;
-	alarm.period = tmp;
+	alarm.period.sec = alarm.period.nsec = 0;
 	alarm.exp_time = tmp;
 
 	return k_alarm_new (	&tsched->params.edf.edf_deadline_alarm,
@@ -129,13 +124,11 @@ static int edf_arm_deadline ( kthread_t *kthread )
 
 static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 {
-	time_t now, tmp;
+	time_t now;
 	alarm_t alarm;
 	kthread_sched_data_t *tsched = kthread_get_sched_param ( kthread );
 	ksched_t *gsched = ksched_get ( SCHED_EDF );
 
-	tmp.sec = 0;
-	tmp.nsec = 0;
 
 	if ( gsched->params.edf.active == kthread )
 		gsched->params.edf.active = NULL;
@@ -188,7 +181,7 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 		alarm.action = edf_deadline_timer;
 		alarm.param = kthread;
 		alarm.flags = 0;
-		alarm.period = tmp;
+		alarm.period.sec = alarm.period.nsec = 0;
 		alarm.exp_time = tsched->params.edf.active_deadline;
 
 		k_alarm_set ( tsched->params.edf.edf_deadline_alarm, &alarm );
@@ -377,12 +370,9 @@ static void edf_period_timer ( void *p )
 static void edf_deadline_timer ( void *p )
 {
 	alarm_t alarm;
-	time_t tmp;
 	kthread_t *kthread = p, *test;
 	kthread_sched_data_t *tsched  = kthread_get_sched_param ( kthread );
 
-	tmp.sec = 0;
-	tmp.nsec = 0;
 
 	ASSERT ( kthread );
 
@@ -456,7 +446,7 @@ static void edf_deadline_timer ( void *p )
 				alarm.action = edf_deadline_timer;
 				alarm.param = kthread;
 				alarm.flags = 0;
-				alarm.period = tmp;
+				alarm.period.sec = alarm.period.nsec = 0;
 				alarm.exp_time = tsched->params.edf.active_deadline;
 
 				k_alarm_set ( tsched->params.edf.edf_deadline_alarm, &alarm );
