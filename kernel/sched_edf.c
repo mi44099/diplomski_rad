@@ -113,7 +113,7 @@ static int edf_arm_deadline ( kthread_t *kthread )
 	alarm.param = kthread;
 	alarm.flags = 0;
 	alarm.period.sec = alarm.period.nsec = 0;
-	alarm.exp_time = tmp;
+	alarm.exp_time.sec = alarm.exp_time.nsec = 0;
 
 	return k_alarm_new (	&tsched->params.edf.edf_deadline_alarm,
 				&alarm,
