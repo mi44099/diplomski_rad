@@ -166,28 +166,26 @@ static int edf_set_thread_sched_parameters (kthread_t *kthread, sched_t *params)
 
 		/* set times for next period */
 		if ( time_cmp ( &now, &tsched->params.edf.next_run ) > 0 )
-		{
 			time_add ( &tsched->params.edf.next_run,
 				   &tsched->params.edf.period );
 
-			tsched->params.edf.active_deadline = tsched->params.edf.next_run;
-			time_add ( &tsched->params.edf.active_deadline,
-				   &tsched->params.edf.relative_deadline );
-		
-			if ( kthread == gsched->params.edf.active )
-				gsched->params.edf.active = NULL;
+		tsched->params.edf.active_deadline = tsched->params.edf.next_run;
+		time_add ( &tsched->params.edf.active_deadline,
+			   &tsched->params.edf.relative_deadline );
 
-			/* set (separate) alarm for deadline */
+		if ( kthread == gsched->params.edf.active )
+			gsched->params.edf.active = NULL;
 
-			alarm.action = edf_deadline_timer;
-			alarm.param = kthread;
-			alarm.flags = 0;
-			alarm.period.sec = alarm.period.nsec = 0;
-			alarm.exp_time = tsched->params.edf.active_deadline;
+		/* set (separate) alarm for deadline */
 
-			k_alarm_set ( tsched->params.edf.edf_deadline_alarm, &alarm );
+		alarm.action = edf_deadline_timer;
+		alarm.param = kthread;
+		alarm.flags = 0;
+		alarm.period.sec = alarm.period.nsec = 0;
+		alarm.exp_time = tsched->params.edf.active_deadline;
 
-		}
+		k_alarm_set ( tsched->params.edf.edf_deadline_alarm, &alarm );
+
 
 		/* is task ready for execution, or must wait until next period */
 		if ( time_cmp ( &tsched->params.edf.next_run, &now ) > 0 )

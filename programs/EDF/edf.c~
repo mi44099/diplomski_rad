@@ -38,7 +38,7 @@ static void edf_thread ( void *param )
 //	deadline.nsec = 500000000 * ( thr_no % 2 );
 
 	message ( thr_no, "EDF_SET" );
-	edf_set ( deadline, period, EDF_SET, EDF_TERMINATE );
+	edf_set ( deadline, period, EDF_SET, EDF_SKIP );
 
 	for ( i = 0; ; i++ )
 	{
